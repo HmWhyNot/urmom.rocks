@@ -24,4 +24,6 @@ app.MapControllerRoute(
 
 app.MapFallbackToFile("index.html");;
 
+app.MapGet("api/test", () => new { Test = "urmom" });
+
 app.Run();
