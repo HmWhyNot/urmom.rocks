@@ -4,17 +4,17 @@ import mkcert from 'vite-plugin-mkcert'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue(), mkcert()]
+  plugins: [vue(), mkcert()],
   server: {
     port: 3333,
     https: true,
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'https://localhost:7153',
-	changeOrigin: true,
-	secure: false,
-       }
-     }
+        target: 'https://localhost:7111',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   }
 })

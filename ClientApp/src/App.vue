@@ -2,18 +2,6 @@
 // This starter template is using Vue 3 <script setup> SFCs
 // Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
 import HelloWorld from './components/HelloWorld.vue'
-
-import { onMounted, ref } from 'vue';
-
-interface TestData {
-  test: string;
-}
-
-const result = ref<TestData>({test: ""})
-onMounted(async () => {
-  result.value = await (await fetch("/api/test")).json();
-});
-
 </script>
 
 <template>
@@ -26,7 +14,6 @@ onMounted(async () => {
     </a>
   </div>
   <HelloWorld msg="Vite + Vue" />
-  <div>Result: {{ result.test }}</div>
 </template>
 
 <style scoped>
