@@ -27,6 +27,8 @@
         </p>
       </v-col>
 
+      <div>Result: {{ result.test }}</div>
+
       <v-col
         class="mb-5"
         cols="12"
@@ -94,13 +96,30 @@
 </template>
 
 <script lang='ts'>
-import { defineComponent } from 'vue'
+import { defineComponent, onMounted, ref } from 'vue'
 
 // Logo
 import logo from '../assets/logo.svg'
 
+interface TestData {
+  test: string;
+}
+
+
+
+
 export default defineComponent({
   name: 'HelloWorld',
+
+  setup() {
+    const result = ref<TestData>({test: ''});
+    onMounted(async () => {
+      result.value = await (await fetch("/api/test")).json()
+      });
+    return {
+      result,
+    }
+  },
 
   data () {
     return {
