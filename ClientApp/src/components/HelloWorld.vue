@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUpdated, ref } from 'vue'
+import { onMounted, onUpdated, reactive, ref } from 'vue'
 
 interface TestData {
   test: string;
