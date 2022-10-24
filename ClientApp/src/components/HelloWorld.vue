@@ -1,9 +1,32 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, onUpdated, ref } from 'vue'
+
+interface TestData {
+  test: string;
+}
 
 defineProps<{ msg: string }>()
-
+const result = ref<TestData>({test:''})
 const count = ref(0)
+
+onMounted(async () => {
+  result.value = await (await fetch("/api/test")).json();
+
+})
+
+onUpdated(async () => {
+  if (count.value == 5) {
+    result.value.test = 'no u';
+    console.log('no u');
+  }
+  else if (count.value == 10) {
+    result.value.test = 'oofgottem';
+  }
+})
+
+
+
+
 </script>
 
 <template>
@@ -29,6 +52,7 @@ const count = ref(0)
     in your IDE for a better DX
   </p>
   <p class="read-the-docs">Click on the Vite and Vue logos to learn more</p>
+  <div>Result: {{ result.test }}</div>
 </template>
 
 <style scoped>

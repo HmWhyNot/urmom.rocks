@@ -7,11 +7,11 @@ export default defineConfig({
   plugins: [vue(), mkcert()],
   server: {
     port: 3333,
-    https: true,
+    https: false,
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'https://localhost:7111',
+        target: 'http://localhost:5178',
         changeOrigin: true,
         secure: false,
       }
