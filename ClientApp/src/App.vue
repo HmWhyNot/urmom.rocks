@@ -3,13 +3,12 @@
     <v-main>
       <HelloWorld/>
     </v-main>
-    <div>Result: {{ result.test }}</div>
   </v-app>
   
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref } from 'vue'
+import { defineComponent } from 'vue'
 import HelloWorld from './components/HelloWorld.vue'
 
 export default defineComponent({
@@ -18,15 +17,6 @@ export default defineComponent({
   components: {
     HelloWorld,
   },
-  setup() {
-    const result = ref<TestData>({test: ''});
-    onMounted(async () => {
-      result.value = await (await fetch("/api/test")).json()
-      });
-    return {
-      result,
-    }
-  },
 
   data () {
     return {
@@ -34,9 +24,5 @@ export default defineComponent({
     }
   },
 })
-
-interface TestData {
-  test: string;
-}
 
 </script>

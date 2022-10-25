@@ -25,9 +25,8 @@
             target="_blank"
           >Discord Community</a>
         </p>
+        <div>Result: {{ result.test }}</div>
       </v-col>
-
-      <div>Result: {{ result.test }}</div>
 
       <v-col
         class="mb-5"
@@ -95,6 +94,16 @@
   </v-container>
 </template>
 
+
+<script setup lang='ts'>
+console.log('too');
+onMounted(async () => {
+  console.log('poo');
+  result.value = await (await fetch("/api/test")).json();
+  console.log('wow');
+});
+</script>
+
 <script lang='ts'>
 import { defineComponent, onMounted, ref } from 'vue'
 
@@ -104,22 +113,10 @@ import logo from '../assets/logo.svg'
 interface TestData {
   test: string;
 }
-
-
-
+const result = ref<TestData>({test: ''});
 
 export default defineComponent({
   name: 'HelloWorld',
-
-  setup() {
-    const result = ref<TestData>({test: ''});
-    onMounted(async () => {
-      result.value = await (await fetch("/api/test")).json()
-      });
-    return {
-      result,
-    }
-  },
 
   data () {
     return {
