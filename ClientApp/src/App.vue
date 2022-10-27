@@ -17,7 +17,7 @@
       <MainPage/>
     </v-main>
 
-    <v-footer app>
+    <v-footer app color="grey-darken-2">
       lol
     </v-footer>
   </v-app>
