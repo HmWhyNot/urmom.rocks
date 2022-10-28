@@ -1,8 +1,8 @@
 <template>
-    <v-sheet border class="fill-height">
-        <v-container fluid class="fill-height">
-            <v-sheet border class="fill-height">
-                <v-row fluid justify="center" align="center" class="fill-height">
+    <v-sheet>
+        <v-container class="fill-height">
+            <v-sheet>
+                <v-row justify="center" class="fill-height">
                     <h1>no u</h1>
                 </v-row>
             </v-sheet>
