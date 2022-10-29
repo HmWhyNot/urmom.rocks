@@ -1,9 +1,9 @@
 <template>
-    <v-sheet>
+    <v-sheet color="background">
         <v-container class="fill-height">
             <v-sheet>
                 <v-row justify="center" class="fill-height">
-                    <h1>no u</h1>
+                    <h1 >no u</h1>
                 </v-row>
             </v-sheet>
         </v-container>

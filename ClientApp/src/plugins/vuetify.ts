@@ -4,27 +4,28 @@ import 'vuetify/styles'
 
 // Vuetify
 import { createVuetify } from 'vuetify'
-import { md2 } from 'vuetify/blueprints'
+import { md3 } from 'vuetify/blueprints'
+import colors from 'vuetify/lib/util/colors'
 
 export default createVuetify({
-  blueprint: md2,
+  blueprint: md3,
   theme: {
     defaultTheme: 'dark',
     themes: {
       dark: {
         dark: true,
         colors: {
-          ui1: '#263238',
-          ui2: '#455a64',
-          ui3: '#78909c',
+          ui1: colors.blueGrey.darken4,
+          ui2: colors.blueGrey.darken2,
+          ui3: colors.blueGrey.lighten1,
         },
       },
       light: {
         dark: false,
         colors: {
-          ui1: '#cfd8dc',
-          ui2: '#b0bec5',
-          ui3: '#78909c',
+          ui1: colors.blueGrey.lighten4,
+          ui2: colors.blueGrey.lighten3,
+          ui3: colors.blueGrey.lighten1,
         },
       },
     },

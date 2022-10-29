@@ -4,25 +4,50 @@
       <v-container>
         <v-row>
           <v-col cols="1">
-            <v-app-bar-nav-icon @click="dialog = true" @mouseover="mom = 'WOW'" @mouseleave="mom = 'MOM'"> {{ mom }} </v-app-bar-nav-icon>
+            <v-app-bar-nav-icon @mouseover="mom = 'WOW'" @mouseleave="mom = 'MOM'"> {{ mom }} </v-app-bar-nav-icon>
+
+            <v-dialog width="50%" class="text-center" v-model="dialog" activator="parent" :scrim="true" :fullscreen="mobile">
+              <v-sheet color="background">
+              <v-container>
+              <v-card>
+                <v-card-text class="text-center">
+                  roflmao
+                </v-card-text>
+                <v-card-actiona>
+                  <v-btn color="ui1" @click="dialog = false">
+                    Hi
+                  </v-btn>
+                </v-card-actiona>
+              </v-card>
+              </v-container>
+              </v-sheet>
+            </v-dialog>
+
           </v-col>
           <v-col cols="10">
             <v-app-bar-title align="center">
               <b>{{ title }}</b>
             </v-app-bar-title>
           </v-col>
-          <v-col cols="1">
-            <v-switch width="min" v-model="theme.global.name" true-value="light" false-value="dark"></v-switch>
+          <v-col justify="right" cols="1">
+            <v-switch :label="dark" hide-details="true" width="min" v-model="theme.global.name" true-value="light" false-value="dark"></v-switch>
           </v-col>
         </v-row>
       </v-container>
     </v-app-bar>
 
-    <v-dialog v-model="dialog" :fullscreen="mobile">
-      <v-btn @click="dialog = false">
-        Hi
-      </v-btn>
-    </v-dialog>
+    <!-- <v-dialog class="text-center" v-model="dialog" :fullscreen="mobile">
+      <v-card>
+        <v-card-text class="text-center">
+          roflmao
+        </v-card-text>
+        <v-card-actiona>
+          <v-btn color="ui1" @click="dialog = false">
+            Hi
+          </v-btn>
+        </v-card-actiona>
+      </v-card>
+    </v-dialog> -->
 
     <v-main>
       <MainPage/>
@@ -55,10 +80,11 @@ const title = ref<string>('oofgottem');
 const mom = ref<string>('MOM');
 const { mobile, mobileBreakpoint } = useDisplay();
 const theme = useTheme();
+const dark = theme.global.name;
 mobileBreakpoint.value = 'sm';
 console.log(useDisplay());
-console.log(theme.global.name);
-const dark = 'darken';
+console.log(theme);
+console.log(dark);
 
 
 </script>
