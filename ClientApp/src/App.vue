@@ -3,16 +3,18 @@
     <v-app-bar app color="ui1" :border="barBorder" density="compact" :elevation="elevation">
       <v-container fluid>
         <v-row>
+
           <v-col class="justify-left" align="left">
             <v-app-bar-nav-icon @mouseover="mom = 'WOW'" @mouseleave="mom = 'MOM'"> {{ mom }} </v-app-bar-nav-icon>
 
-            <v-dialog width="50%" class="text-center" v-model="dialog" activator="parent" :scrim="true" :fullscreen="mobile">
+            <v-dialog label="woo" width="50%" class="text-center" v-model="dialog" activator="parent" :scrim="true" :fullscreen="mobile">
               <v-sheet color="background">
                 <v-container>
                   <v-card :elevation="elevation">
                     <v-card-text class="text-center">
                       {{ dgMsg }}
                     </v-card-text>
+                    <v-textarea label="Ur mom is a" variant="solo" :elevation="0"></v-textarea>
                     <v-card-actions>
                       <v-card class="mx-1" color="ui1">
                         <v-btn color="ui3" @click="dgHi">
@@ -30,7 +32,7 @@
               </v-sheet>
             </v-dialog>
           </v-col>
-          
+
           <v-col class="justify-center">
             <v-app-bar-title align="center">
               <b>{{ title }}</b>
@@ -45,7 +47,7 @@
             <v-col cols="auto"></v-col>
             <v-col cols="auto"></v-col>
           </v-col>
-          <span @mouseover="dad" @mouseleave="dad" class="dad">dad</span>
+          <div @mouseover="dad" @mouseleave="dad" class="dad">dad</div>
         </v-row>
       </v-container>
     </v-app-bar>
