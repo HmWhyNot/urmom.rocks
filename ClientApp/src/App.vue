@@ -1,9 +1,9 @@
 <template>
   <v-app>
     <v-app-bar app color="ui1" :border="barBorder" density="compact" :elevation="elevation">
-      <v-container>
+      <v-container fluid>
         <v-row>
-          <v-col cols="1">
+          <v-col class="justify-left" align="left">
             <v-app-bar-nav-icon @mouseover="mom = 'WOW'" @mouseleave="mom = 'MOM'"> {{ mom }} </v-app-bar-nav-icon>
 
             <v-dialog width="50%" class="text-center" v-model="dialog" activator="parent" :scrim="true" :fullscreen="mobile">
@@ -29,16 +29,23 @@
                 </v-container>
               </v-sheet>
             </v-dialog>
-
           </v-col>
-          <v-col cols="10">
+          
+          <v-col class="justify-center">
             <v-app-bar-title align="center">
               <b>{{ title }}</b>
             </v-app-bar-title>
           </v-col>
-          <v-col justify="right" cols="1">
-            <v-switch :label="dark" hide-details="true" width="min" v-model="theme.global.name" true-value="light" false-value="dark"></v-switch>
+
+          <v-col class="d-flex justify-right" align="right">
+            <v-col/>
+            <v-col cols="auto">
+              <v-switch :label="dark" hide-details="true" width="min" v-model="theme.global.name" true-value="light" false-value="dark"></v-switch>
+            </v-col>
+            <v-col cols="auto"></v-col>
+            <v-col cols="auto"></v-col>
           </v-col>
+          <span @mouseover="dad" @mouseleave="dad" class="dad">dad</span>
         </v-row>
       </v-container>
     </v-app-bar>
@@ -50,7 +57,7 @@
     <v-footer app color="ui2">
       <v-sheet @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" color="ui3" height="40" width="40">
         <v-container class="fill-height">
-          <v-row class="fill-height">
+          <v-row style="line-height: 2;" class="fill-height">
             lol
           </v-row>
         </v-container>
@@ -87,7 +94,13 @@ function dgHi() {
   dgMsg.value = 'How rude!!';
   setTimeout(() => {
     dgMsg.value = 'roflmao';
-  }, 1000);
+  }, 2000);
+}
+
+function dad(e) {
+  console.log(e);
+  console.log(e.target.style.opacity);
+  e.target.style.opacity = e.target.style.opacity ^ 1;
 }
 
 
@@ -95,5 +108,17 @@ function dgHi() {
 
 
 <style>
+.dad {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  z-index: 999;
+  text-align: center;
+  margin: auto;
+  line-height: 50px;
+  right: 0;
+  display: block;
+  opacity: 0;
+}
 
 </style>
