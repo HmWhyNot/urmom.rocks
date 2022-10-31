@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar app color="ui1" border="barBorder" density="compact" :elevation="elevation">
+    <v-app-bar app color="ui1" :border="barBorder" density="compact" :elevation="elevation">
       <v-container>
         <v-row>
           <v-col cols="1">
@@ -8,18 +8,25 @@
 
             <v-dialog width="50%" class="text-center" v-model="dialog" activator="parent" :scrim="true" :fullscreen="mobile">
               <v-sheet color="background">
-              <v-container>
-              <v-card>
-                <v-card-text class="text-center">
-                  roflmao
-                </v-card-text>
-                <v-card-actiona>
-                  <v-btn color="ui1" @click="dialog = false">
-                    Hi
-                  </v-btn>
-                </v-card-actiona>
-              </v-card>
-              </v-container>
+                <v-container>
+                  <v-card :elevation="elevation">
+                    <v-card-text class="text-center">
+                      {{ dgMsg }}
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-card class="mx-1" color="ui1">
+                        <v-btn color="ui3" @click="dgHi">
+                          Hi
+                        </v-btn>
+                      </v-card>
+                      <v-card class="mx-1" color="ui1">
+                        <v-btn color="ui3" @click="dialog = false">
+                          Bye
+                        </v-btn>
+                      </v-card>
+                    </v-card-actions>
+                  </v-card>
+                </v-container>
               </v-sheet>
             </v-dialog>
 
@@ -36,30 +43,21 @@
       </v-container>
     </v-app-bar>
 
-    <!-- <v-dialog class="text-center" v-model="dialog" :fullscreen="mobile">
-      <v-card>
-        <v-card-text class="text-center">
-          roflmao
-        </v-card-text>
-        <v-card-actiona>
-          <v-btn color="ui1" @click="dialog = false">
-            Hi
-          </v-btn>
-        </v-card-actiona>
-      </v-card>
-    </v-dialog> -->
-
     <v-main>
       <MainPage/>
     </v-main>
 
     <v-footer app color="ui2">
-      <v-sheet color="ui3" height="50" width="50">
+      <v-sheet @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" color="ui3" height="40" width="40">
         <v-container class="fill-height">
           <v-row class="fill-height">
             lol
           </v-row>
         </v-container>
+
+        <v-menu @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" absolute open-on-hover activator="parent" :close-on-content-click="false">
+          {{ hello }}
+        </v-menu>
       </v-sheet>
     </v-footer>
   </v-app>
@@ -74,17 +72,23 @@ import HelloWorld from './components/HelloWorld.vue'
 import MainPage from './components/MainPage.vue'
 
 const dialog = ref<boolean>(false);
-const barBorder = ref<number>(3);
+const barBorder = ref<number>(300);
 const elevation = ref<number>(10);
 const title = ref<string>('oofgottem');
 const mom = ref<string>('MOM');
 const { mobile, mobileBreakpoint } = useDisplay();
 const theme = useTheme();
 const dark = theme.global.name;
+const hello = ref<string>('HELLO');
+const dgMsg = ref<string>('roflmao');
 mobileBreakpoint.value = 'sm';
-console.log(useDisplay());
-console.log(theme);
-console.log(dark);
+
+function dgHi() {
+  dgMsg.value = 'How rude!!';
+  setTimeout(() => {
+    dgMsg.value = 'roflmao';
+  }, 1000);
+}
 
 
 </script>
