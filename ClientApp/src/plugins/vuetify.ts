@@ -50,6 +50,7 @@ export default createVuetify({
       justify: 'center',
       align: 'center',
       height: '100%',
+      userSelect: 'none',
     },
   },
 })
