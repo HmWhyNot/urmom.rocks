@@ -35,7 +35,7 @@
           </v-col>
 
           <v-col class="justify-center">
-            <v-app-bar-title align="center">
+            <v-app-bar-title align="center" @click="pageSwitch">
               <b>{{ title }}</b>
             </v-app-bar-title>
           </v-col>
@@ -43,7 +43,7 @@
           <v-col class="d-flex justify-right" align="right">
             <v-col/>
             <v-col cols="auto">
-              <v-switch :label="dark" hide-details="true" width="min" v-model="theme.global.name" true-value="light" false-value="dark"></v-switch>
+              <v-switch :label="dark" hide-details width="min" v-model="theme.global.name" true-value="light" false-value="dark"></v-switch>
             </v-col>
             <v-col cols="auto"></v-col>
             <v-col cols="auto"></v-col>
@@ -54,7 +54,7 @@
     </v-app-bar>
 
     <v-main>
-      <component :is="page"/>
+      <component :is="currentPage"/>
     </v-main>
 
     <v-footer app color="ui2">
@@ -76,13 +76,15 @@
 
 
 <script setup lang="ts">
-import { ref, shallowRef, onMounted } from 'vue'
+import { ref, shallowRef, onMounted, defineAsyncComponent } from 'vue'
 import { useDisplay, useTheme } from 'vuetify'
+
 import HelloWorld from './components/HelloWorld.vue'
 import MainPage from './components/MainPage.vue'
 
-const page = shallowRef<component>(MainPage);
-// const page = MainPage;
+const currentPage = shallowRef<any>(MainPage);
+const pageList = ref<Array<object>>([MainPage, HelloWorld]);
+
 const dialog = ref<boolean>(false);
 const barBorder = ref<number>(300);
 const elevation = ref<number>(10);
@@ -94,14 +96,10 @@ const dark = theme.global.name;
 const hello = ref<string>('HELLO');
 const dgMsg = ref<string>('roflmao');
 mobileBreakpoint.value = 'sm';
-console.log("Page:");
-console.log(typeof(page));
-// page.value = HelloWorld;
 
-onMounted(() => {
-  console.log(page);
-  // page.value = HelloWorld;
-})
+function pageSwitch() {
+  currentPage.value = currentPage.value == MainPage ? HelloWorld : MainPage;
+}
 
 function dgHi() {
   dgMsg.value = 'How rude!!';
@@ -110,9 +108,7 @@ function dgHi() {
   }, 2000);
 }
 
-function dad(e) {
-  console.log(e);
-  console.log(e.target.style.opacity);
+function dad(e: any) {
   e.target.style.opacity = e.target.style.opacity ^ 1;
 }
 
@@ -132,6 +128,7 @@ function dad(e) {
   right: 0;
   display: block;
   opacity: 0;
+  user-select: none;
 }
 
 </style>
