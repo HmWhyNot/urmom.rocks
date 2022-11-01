@@ -5,32 +5,33 @@
         <v-row>
 
           <v-col class="justify-left" align="left">
-            <v-app-bar-nav-icon @mouseover="mom = 'WOW'" @mouseleave="mom = 'MOM'"> {{ mom }} </v-app-bar-nav-icon>
-
-            <v-dialog label="woo" width="50%" class="text-center" v-model="dialog" activator="parent" :scrim="true" :fullscreen="mobile">
-              <v-sheet color="background">
-                <v-container>
-                  <v-card :elevation="elevation">
-                    <v-card-text class="text-center">
-                      {{ dgMsg }}
-                    </v-card-text>
-                    <v-textarea label="Ur mom is a" variant="solo" :elevation="0"></v-textarea>
-                    <v-card-actions>
-                      <v-card class="mx-1" color="ui1">
-                        <v-btn color="ui3" @click="dgHi">
-                          Hi
-                        </v-btn>
-                      </v-card>
-                      <v-card class="mx-1" color="ui1">
-                        <v-btn color="ui3" @click="dialog = false">
-                          Bye
-                        </v-btn>
-                      </v-card>
-                    </v-card-actions>
-                  </v-card>
-                </v-container>
-              </v-sheet>
-            </v-dialog>
+            <v-app-bar-nav-icon @mouseover="mom = 'WOW'" @mouseleave="mom = 'MOM'">
+              <v-dialog label="woo" width="50%" class="text-center" v-model="dialog" activator="parent" :scrim="true" :fullscreen="mobile">
+                <v-sheet color="background">
+                  <v-container>
+                    <v-card :elevation="elevation">
+                      <v-card-text class="text-center">
+                        {{ dgMsg }}
+                      </v-card-text>
+                      <v-textarea label="Ur mom is a" variant="solo" :elevation="0"></v-textarea>
+                      <v-card-actions>
+                        <v-card class="mx-1" color="ui1">
+                          <v-btn color="ui3" @click="dgHi">
+                            Hi
+                          </v-btn>
+                        </v-card>
+                        <v-card class="mx-1" color="ui1">
+                          <v-btn color="ui3" @click="dialog = false">
+                            Bye
+                          </v-btn>
+                        </v-card>
+                      </v-card-actions>
+                    </v-card>
+                  </v-container>
+                </v-sheet>
+              </v-dialog>
+              {{ mom }}
+            </v-app-bar-nav-icon>
           </v-col>
 
           <v-col class="justify-center">
@@ -53,7 +54,7 @@
     </v-app-bar>
 
     <v-main>
-      <MainPage/>
+      <component :is="page"/>
     </v-main>
 
     <v-footer app color="ui2">
@@ -75,11 +76,13 @@
 
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, shallowRef, onMounted } from 'vue'
 import { useDisplay, useTheme } from 'vuetify'
 import HelloWorld from './components/HelloWorld.vue'
 import MainPage from './components/MainPage.vue'
 
+const page = shallowRef<component>(MainPage);
+// const page = MainPage;
 const dialog = ref<boolean>(false);
 const barBorder = ref<number>(300);
 const elevation = ref<number>(10);
@@ -91,6 +94,14 @@ const dark = theme.global.name;
 const hello = ref<string>('HELLO');
 const dgMsg = ref<string>('roflmao');
 mobileBreakpoint.value = 'sm';
+console.log("Page:");
+console.log(typeof(page));
+// page.value = HelloWorld;
+
+onMounted(() => {
+  console.log(page);
+  // page.value = HelloWorld;
+})
 
 function dgHi() {
   dgMsg.value = 'How rude!!';
