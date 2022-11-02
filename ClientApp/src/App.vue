@@ -56,7 +56,9 @@
     </v-app-bar>
 
     <v-main>
-      <component :is="currentPage"/>
+      <transition appear name="page" mode="out-in">
+        <component :is="currentPage"/>
+      </transition>
     </v-main>
 
     <v-footer app color="ui2">
@@ -171,6 +173,19 @@ function changePage(p) {
   opacity: 1;
   background-color: rgb(var(--v-theme-ui1));
   color: rgb(var(--v-theme-ui3));
+}
+
+.page-enter-to,
+.page-leave-from {
+}
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.1s ease;
+}
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  scale: 75%;
 }
 
 </style>
