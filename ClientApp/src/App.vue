@@ -71,6 +71,9 @@
           {{ hello }}
         </v-menu>
       </v-sheet>
+      <v-sheet v-for="(page, name) in pageList" @click="changePage(name)">
+      {{ name }}
+      </v-sheet>
     </v-footer>
   </v-app>
   
@@ -123,14 +126,19 @@ function pageSwitch() {
 
 function dgHi() {
   dgMsg.value = 'How rude!!';
+  console.log(currentPage);
   setTimeout(() => {
     dgMsg.value = 'roflmao';
   }, 2000);
 }
 
-function dad(e: any) {
-  console.log('dad');
-  e.target.style.opacity = e.target.style.opacity ^ 1;
+function changePage(p) {
+  currentPage.value = pageList.value[p].value;
+  console.log(pageList.value[p]);
+  console.log(pageList.value[p].value);
+  console.log(p);
+  console.log(currentPage);
+  console.log(pageList.value);
 }
 
 
