@@ -71,8 +71,9 @@
           {{ hello }}
         </v-menu>
       </v-sheet>
-      <v-sheet v-for="(page, name) in pageList" @click="changePage(name)">
-      {{ name }}
+      <!-- <v-sheet v-for="(page, name, i) in pageList" @click="changePage(page)"> -->
+        <v-sheet v-for="[name, page] in pageList" @click="currentPage = page.value">
+        {{ name }}
       </v-sheet>
     </v-footer>
   </v-app>
@@ -87,23 +88,38 @@ import { useDisplay, useTheme } from 'vuetify'
 import HelloWorld from './components/HelloWorld.vue'
 import MainPage from './components/MainPage.vue'
 
-const pageList = shallowRef<object>({});
-console.log('Start:');
-console.log(pageList);
+// const pageList = shallowRef<object>({});
+// let pageList: { [key: string]: any} = {};
+const pageList = new Map();
 for (const p in import.meta.glob('./components/*.vue')) {
-  console.log('Page:');
-  console.log(p);
-  const n = p.split('/').pop().replace(/\.\w+$/, '');
-  console.log('Name:');
-  console.log(n);
-  pageList.value[n] = shallowRef<object>(eval(n));
-  console.log(pageList);
-  console.log(pageList.value);
-  console.log(pageList.value[n]);
+  const n = p.split('/').pop()!.replace(/\.\w+$/, '');
+  pageList.set(n, shallowRef<object>(eval(n)));
+  // pageList[n] = shallowRef<object>(eval(n));
 }
-const currentPage = ref<object>(pageList.value['MainPage']);
-console.log(pageList.value['MainPage']);
-console.log(currentPage);
+// const currentPage = shallowRef<object>(pageList['MainPage'].value);
+  const currentPage = shallowRef<object>(pageList.get('MainPage').value);
+// console.log(pageList['MainPage']);
+
+
+// const pageList = shallowRef<object>({});
+// console.log('Start:');
+// console.log(pageList);
+// for (const p in import.meta.glob('./components/*.vue')) {
+//   console.log('Page:');
+//   console.log(p);
+//   const n = p.split('/').pop().replace(/\.\w+$/, '');
+//   console.log('Name:');
+//   console.log(n);
+//   pageList.value[n] = eval(n);
+//   console.log(pageList);
+//   console.log(pageList.value);
+//   console.log(pageList.value[n]);
+//   console.log(pageList.value['MainPage']);
+// }
+// const currentPage = shallowRef<object>(pageList.value['MainPage']);
+// console.log(pageList.value['MainPage']);
+// console.log('cur');
+// console.log(currentPage);
 
 
 
@@ -133,13 +149,37 @@ function dgHi() {
 }
 
 function changePage(p) {
-  currentPage.value = pageList.value[p].value;
-  console.log(pageList.value[p]);
-  console.log(pageList.value[p].value);
+  console.log('change');
   console.log(p);
+  currentPage.value = p.value;
+  console.log(p);
+  console.log('cur');
   console.log(currentPage);
-  console.log(pageList.value);
 }
+
+// function changePage(p: string) {
+//   console.log('change');
+//   console.log(p);
+//   currentPage.value = pageList[p].value;
+//   console.log(pageList[p].value);
+//   console.log(pageList[p].value.value);
+//   console.log(p);
+//   console.log('cur');
+//   console.log(currentPage);
+//   console.log(pageList[p]);
+// }
+
+
+
+// function changePage(p) {
+//   currentPage.value = pageList.value[p];
+//   console.log(pageList.value[p]);
+//   console.log(pageList.value[p].value);
+//   console.log(p);
+//   console.log('cur');
+//   console.log(currentPage);
+//   console.log(pageList.value);
+// }
 
 
 </script>
