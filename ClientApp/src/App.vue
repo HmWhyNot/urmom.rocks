@@ -35,20 +35,22 @@
           </v-col>
 
           <v-col class="justify-center">
-            <v-app-bar-title align="center" @click="pageSwitch">
+            <v-app-bar-title align="center" style="user-select: none;">
               <b>{{ title }}</b>
             </v-app-bar-title>
           </v-col>
 
           <v-col class="d-flex justify-right" align="right">
-            <v-col/>
-            <v-col cols="auto">
-              <v-switch :label="dark" hide-details width="min" v-model="theme.global.name" true-value="light" false-value="dark"></v-switch>
-            </v-col>
-            <v-col cols="auto"></v-col>
-            <v-col cols="auto"></v-col>
+            <v-row>
+              <v-switch class="d-flex flex-row-reverse" :label="dark" hide-details width="min" v-model="theme.global.name" true-value="light" false-value="dark"></v-switch>
+              <v-hover v-slot="{ isHovering, props }">
+                <v-card v-bind="props" :style="isHovering ? { opacity: 1 } : { opacity: 0 }" class="dad">
+                  <div @click="pageSwitch" v-if="isHovering">dad</div>
+                </v-card>
+              </v-hover>
+            </v-row>
           </v-col>
-          <div @mouseover="dad" @mouseleave="dad" class="dad">dad</div>
+          <!-- <div @mouseover="dad" @mouseleave="dad" @click="pageSwitch" class="d-flex dad">dad</div> -->
         </v-row>
       </v-container>
     </v-app-bar>
@@ -60,12 +62,12 @@
     <v-footer app color="ui2">
       <v-sheet @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" color="ui3" height="40" width="40">
         <v-container class="fill-height">
-          <v-row style="line-height: 2;" class="fill-height">
+          <v-row style="line-height: 2; user-select: none;" class="fill-height">
             lol
           </v-row>
         </v-container>
 
-        <v-menu @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" absolute open-on-hover activator="parent" :close-on-content-click="false">
+        <v-menu style="user-select: none;" @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" absolute open-on-hover activator="parent" :close-on-content-click="false">
           {{ hello }}
         </v-menu>
       </v-sheet>
@@ -76,14 +78,32 @@
 
 
 <script setup lang="ts">
-import { ref, shallowRef, onMounted, defineAsyncComponent } from 'vue'
+import { ref, shallowRef, onMounted, defineAsyncComponent, getCurrentInstance } from 'vue'
 import { useDisplay, useTheme } from 'vuetify'
 
 import HelloWorld from './components/HelloWorld.vue'
 import MainPage from './components/MainPage.vue'
 
-const currentPage = shallowRef<any>(MainPage);
-const pageList = ref<Array<object>>([MainPage, HelloWorld]);
+const pageList = shallowRef<object>({});
+console.log('Start:');
+console.log(pageList);
+for (const p in import.meta.glob('./components/*.vue')) {
+  console.log('Page:');
+  console.log(p);
+  const n = p.split('/').pop().replace(/\.\w+$/, '');
+  console.log('Name:');
+  console.log(n);
+  pageList.value[n] = shallowRef<object>(eval(n));
+  console.log(pageList);
+  console.log(pageList.value);
+  console.log(pageList.value[n]);
+}
+const currentPage = ref<object>(pageList.value['MainPage']);
+console.log(pageList.value['MainPage']);
+console.log(currentPage);
+
+
+
 
 const dialog = ref<boolean>(false);
 const barBorder = ref<number>(300);
@@ -109,6 +129,7 @@ function dgHi() {
 }
 
 function dad(e: any) {
+  console.log('dad');
   e.target.style.opacity = e.target.style.opacity ^ 1;
 }
 
@@ -118,7 +139,6 @@ function dad(e: any) {
 
 <style>
 .dad {
-  position: absolute;
   width: 50px;
   height: 50px;
   z-index: 999;
@@ -127,7 +147,7 @@ function dad(e: any) {
   line-height: 50px;
   right: 0;
   display: block;
-  opacity: 0;
+  opacity: 1;
   user-select: none;
 }
 
