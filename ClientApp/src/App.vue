@@ -42,7 +42,7 @@
 
           <v-col class="d-flex justify-right" align="right">
             <v-row>
-              <v-switch class="d-flex flex-row-reverse" :label="dark" hide-details width="min" v-model="theme.global.name" true-value="light" false-value="dark"></v-switch>
+              <v-switch class="d-flex flex-row-reverse" :label="dark" hide-details width="min" v-model="theme.global.name" true-value="light" false-value="dark"/>
               <v-hover v-slot="{ isHovering, props }">
                 <v-card v-bind="props" :style="isHovering ? { opacity: 1 } : { opacity: 0 }" class="dad">
                   <div @click="pageSwitch" v-if="isHovering">dad</div>
@@ -60,7 +60,7 @@
     </v-main>
 
     <v-footer app color="ui2">
-      <v-sheet @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" color="ui3" height="40" width="40">
+      <v-sheet @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" color="ui3" height="40" width="45">
         <v-container class="fill-height">
           <v-row style="line-height: 2; user-select: none;" class="fill-height">
             lol
@@ -71,9 +71,27 @@
           {{ hello }}
         </v-menu>
       </v-sheet>
-      <!-- <v-sheet v-for="(page, name, i) in pageList" @click="changePage(page)"> -->
-        <v-sheet v-for="[name, page] in pageList" @click="currentPage = page.value">
-        {{ name }}
+
+      <v-container padding="0px">
+        <v-row padding="0px" no-gutters justify="start">
+          <v-col v-for="page in pageList" class="my-n16 py-n16 pe-5 ms-0 me-n4" cols="1">
+            <v-sheet class="nav" :style="{opacity: currentPage == page ? 1 : 0.65}" @click="currentPage = page">
+              {{ page.name || page.__name.replace(/\d/, '') }}
+            </v-sheet>
+          </v-col>
+        </v-row>
+      </v-container>
+
+      <v-sheet @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" color="ui3" height="40" width="45">
+        <v-container class="fill-height">
+          <v-row style="line-height: 2; user-select: none;" class="fill-height">
+            lol
+          </v-row>
+        </v-container>
+
+        <v-menu style="user-select: none;" @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" absolute open-on-hover activator="parent" :close-on-content-click="false">
+          {{ hello }}
+        </v-menu>
       </v-sheet>
     </v-footer>
   </v-app>
@@ -85,43 +103,10 @@
 import { ref, shallowRef, onMounted, defineAsyncComponent, getCurrentInstance } from 'vue'
 import { useDisplay, useTheme } from 'vuetify'
 
-import HelloWorld from './components/HelloWorld.vue'
-import MainPage from './components/MainPage.vue'
-
-// const pageList = shallowRef<object>({});
-// let pageList: { [key: string]: any} = {};
-const pageList = new Map();
-for (const p in import.meta.glob('./components/*.vue')) {
-  const n = p.split('/').pop()!.replace(/\.\w+$/, '');
-  pageList.set(n, shallowRef<object>(eval(n)));
-  // pageList[n] = shallowRef<object>(eval(n));
-}
-// const currentPage = shallowRef<object>(pageList['MainPage'].value);
-  const currentPage = shallowRef<object>(pageList.get('MainPage').value);
-// console.log(pageList['MainPage']);
-
-
-// const pageList = shallowRef<object>({});
-// console.log('Start:');
-// console.log(pageList);
-// for (const p in import.meta.glob('./components/*.vue')) {
-//   console.log('Page:');
-//   console.log(p);
-//   const n = p.split('/').pop().replace(/\.\w+$/, '');
-//   console.log('Name:');
-//   console.log(n);
-//   pageList.value[n] = eval(n);
-//   console.log(pageList);
-//   console.log(pageList.value);
-//   console.log(pageList.value[n]);
-//   console.log(pageList.value['MainPage']);
-// }
-// const currentPage = shallowRef<object>(pageList.value['MainPage']);
-// console.log(pageList.value['MainPage']);
-// console.log('cur');
-// console.log(currentPage);
-
-
+import MainPage from './components/0MainPage.vue'
+import HelloWorld from './components/1HelloWorld.vue'
+const pageList = Object.entries(import.meta.glob('./components/[0-9]+*.vue')).map(e => {return eval(e[0].split('/').pop()!.replace(/\.\w+$|\d/g, ''))});
+const currentPage = shallowRef<object>(MainPage);
 
 
 const dialog = ref<boolean>(false);
@@ -157,30 +142,6 @@ function changePage(p) {
   console.log(currentPage);
 }
 
-// function changePage(p: string) {
-//   console.log('change');
-//   console.log(p);
-//   currentPage.value = pageList[p].value;
-//   console.log(pageList[p].value);
-//   console.log(pageList[p].value.value);
-//   console.log(p);
-//   console.log('cur');
-//   console.log(currentPage);
-//   console.log(pageList[p]);
-// }
-
-
-
-// function changePage(p) {
-//   currentPage.value = pageList.value[p];
-//   console.log(pageList.value[p]);
-//   console.log(pageList.value[p].value);
-//   console.log(p);
-//   console.log('cur');
-//   console.log(currentPage);
-//   console.log(pageList.value);
-// }
-
 
 </script>
 
@@ -197,6 +158,19 @@ function changePage(p) {
   display: block;
   opacity: 1;
   user-select: none;
+}
+
+.nav {
+  margin: 0px;
+  text-align: center;
+  line-height: 50px;
+  user-select: none;
+  opacity: 0.5;
+}
+.nav:hover {
+  opacity: 1;
+  background-color: rgb(var(--v-theme-ui1));
+  color: rgb(var(--v-theme-ui3));
 }
 
 </style>
