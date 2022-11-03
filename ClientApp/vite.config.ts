@@ -26,6 +26,16 @@ export default defineConfig({
     }
   },
   preview: {
-    port:3333,
+    port: 3333,
+    https: false,
+    strictPort: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
+      }
+    }
   }
 })

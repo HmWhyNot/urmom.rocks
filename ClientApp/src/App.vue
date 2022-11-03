@@ -32,6 +32,13 @@
               </v-dialog>
               {{ mom }}
             </v-app-bar-nav-icon>
+            <v-btn-toggle divided v-model="test" mandatory="force">
+            <v-col>BG testing:</v-col>
+              <v-btn value="0">0</v-btn>
+              <v-btn value="1">1</v-btn>
+              <v-btn value="2">2</v-btn>
+              <v-btn value="3">3</v-btn>
+            </v-btn-toggle>
           </v-col>
 
           <v-col class="justify-center">
@@ -56,9 +63,33 @@
     </v-app-bar>
 
     <v-main>
-      <transition appear name="page" mode="out-in">
-        <component :is="currentPage"/>
-      </transition>
+      <v-sheet color="background">
+        <v-container v-if="test == 0" class="fill-height">
+          <v-sheet>
+            <transition appear name="pageTran" mode="out-in">
+              <component :is="currentPage"/>
+            </transition>
+          </v-sheet>
+        </v-container>
+
+        <v-container v-if="test == 1" class="fill-height">
+          <v-sheet color="background">
+            <transition appear name="pageTran" mode="out-in">
+              <component :is="currentPage"/>
+            </transition>
+          </v-sheet>
+        </v-container>
+
+        <v-sheet v-if="test == 2">
+          <transition appear name="pageTran" mode="out-in">
+            <component :is="currentPage"/>
+          </transition>
+        </v-sheet>
+
+        <transition v-if="test == 3" appear name="page" mode="out-in">
+          <component :is="currentPage"/>
+        </transition>
+      </v-sheet>
     </v-main>
 
     <v-footer app color="ui2">
@@ -76,22 +107,22 @@
 
       <v-container padding="0px">
         <v-row padding="0px" no-gutters justify="start">
-          <v-col v-for="page in pageList" class="my-n16 py-n16 pe-5 ms-0 me-n4" cols="1">
+          <div v-for="page in pageList" class="my-n16 py-n16 pe-5 ms-0 me-n4" cols="1">
             <v-sheet class="nav" :style="{opacity: currentPage == page ? 1 : 0.65}" @click="currentPage = page">
               {{ page.name || page.__name.replace(/\d/, '') }}
             </v-sheet>
-          </v-col>
+          </div>
         </v-row>
       </v-container>
 
-      <v-sheet @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" color="ui3" height="40" width="45">
+      <v-sheet @mouseover="hello = 'GOODBYE'" @mouseleave="hello = 'HELLO'" color="ui3" height="40" width="45">
         <v-container class="fill-height">
           <v-row style="line-height: 2; user-select: none;" class="fill-height">
             lol
           </v-row>
         </v-container>
 
-        <v-menu style="user-select: none;" @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" absolute open-on-hover activator="parent" :close-on-content-click="false">
+        <v-menu style="user-select: none;" @mouseover="hello = 'GOODBYE'" @mouseleave="hello = 'HELLO'" absolute open-on-hover activator="parent" :close-on-content-click="false">
           {{ hello }}
         </v-menu>
       </v-sheet>
@@ -106,7 +137,11 @@ import { ref, shallowRef, onMounted, defineAsyncComponent, getCurrentInstance } 
 import { useDisplay, useTheme } from 'vuetify'
 
 import MainPage from './components/0MainPage.vue'
+// console.log(MainPage);
 import HelloWorld from './components/1HelloWorld.vue'
+// console.log(HelloWorld);
+import Papa from './components/2Papa.vue'
+console.log(Papa);
 const pageList = Object.entries(import.meta.glob('./components/[0-9]+*.vue')).map(e => {return eval(e[0].split('/').pop()!.replace(/\.\w+$|\d/g, ''))});
 const currentPage = shallowRef<object>(MainPage);
 
@@ -121,7 +156,9 @@ const theme = useTheme();
 const dark = theme.global.name;
 const hello = ref<string>('HELLO');
 const dgMsg = ref<string>('roflmao');
-mobileBreakpoint.value = 'sm';
+// mobileBreakpoint.value = 'sm';
+
+const test = ref<int>(0);
 
 function pageSwitch() {
   currentPage.value = currentPage.value == MainPage ? HelloWorld : MainPage;
@@ -164,6 +201,7 @@ function changePage(p) {
 
 .nav {
   margin: 0px;
+  padding: 0px 10px;
   text-align: center;
   line-height: 50px;
   user-select: none;
@@ -175,17 +213,26 @@ function changePage(p) {
   color: rgb(var(--v-theme-ui3));
 }
 
-.page-enter-to,
-.page-leave-from {
+.pageTran-enter-to,
+.pageTran-leave-from {
 }
-.page-enter-active,
-.page-leave-active {
-  transition: all 0.1s ease;
+.pageTran-enter-active,
+.pageTran-leave-active {
+  transition: all 0.15s ease;
 }
-.page-enter-from,
-.page-leave-to {
+.pageTran-enter-from {
   opacity: 0;
-  scale: 75%;
+  scale: 50% 75%;
+  /* rotate: 5deg; */
+  rotate: x 90deg;
+  translate: 0 5rem;
+}
+.pageTran-leave-to {
+  opacity: 0;
+  scale: 50% 75%;
+  /* rotate: 5deg; */
+  rotate: x 90deg;
+  translate: 0 -5rem;
 }
 
 </style>
