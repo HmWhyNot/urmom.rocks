@@ -24,5 +24,8 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '/api')
       }
     }
+  },
+  preview: {
+    port:3333,
   }
 })
