@@ -59,9 +59,12 @@
       <v-sheet color="background">
         <v-container class="fill-height">
           <v-sheet>
-            <transition appear name="pageTran" mode="out-in">
-              <component :is="currentPage"/>
-            </transition>
+            <router-view v-slot="{ Component }" v-model="currentPage">
+              <transition appear name="pageTran" mode="out-in">
+                <component :is="Component"/>
+                <!-- <router-view v-model="currentPage"/> -->
+              </transition>
+            </router-view>
           </v-sheet>
         </v-container>
       </v-sheet>
@@ -83,10 +86,11 @@
       <v-container padding="0px">
         <v-row padding="0px" no-gutters justify="start">
           <div v-for="page in pageList" class="my-n16 py-n16 pe-5 ms-0 me-n4" cols="1">
-            <v-sheet tabindex="1" class="nav" :style="{opacity: currentPage == page ? 1 : 0.65}" @click="changePage(page)"><!--  @click="currentPage = page"> -->
-              {{ page.name || page.__name.replace(/\d/, '') }}
+            <v-sheet tabindex="1" class="nav" :style="{opacity: currentPage == page ? 1 : 0.65}" @click="changePage(page)">
+              {{ (page.name || page.__name.replace(/\d/, '')).replace(/([A-Z])/g, ' $1').trim() }}
             </v-sheet>
           </div>
+          <v-spacer cols="2"/>
         </v-row>
       </v-container>
 
@@ -108,20 +112,26 @@
 
 
 <script setup lang="ts">
-import { ref, shallowRef, onMounted, defineAsyncComponent, getCurrentInstance } from 'vue'
+import { ref, shallowRef, onMounted, defineAsyncComponent, getCurrentInstance, watch } from 'vue'
 import { useDisplay, useTheme } from 'vuetify'
+import { useRouter, useRoute } from 'vue-router'
 
+// Import page components
 import MainPage from './components/0MainPage.vue'
-// console.log(MainPage);
-import HelloWorld from './components/1HelloWorld.vue'
-// console.log(HelloWorld);
-import Papa from './components/2Papa.vue'
+import HelloWorld from './components/HelloWorld.vue'
+import Papa from './components/1Papa.vue'
 console.log(Papa);
 const pageList = Object.entries(import.meta.glob('./components/[0-9]+*.vue')).map(e => {return eval(e[0].split('/').pop()!.replace(/\.\w+$|\d/g, ''))});
 const currentPage = shallowRef<object>(MainPage);
 const dadPage = shallowRef<object>(HelloWorld);
 
 console.log(window.location);
+console.log('oh');
+console.log(ref());
+
+
+const router = useRouter()
+const route = useRoute()
 
 
 const dialog = ref<boolean>(false);
@@ -152,7 +162,11 @@ function changePage(p) {
   console.log('change');
   console.log(p);
   console.log(currentPage.value);
-  currentPage.value = p;
+  // currentPage.value = p;
+  router.push(
+    { name: p.__name.replace(/\d/, ''), path: `/${p.__name.replace(/\d/, '')}`}
+  );
+  dadPage.value = HelloWorld;
   // window.location.pathname = "/" + (p.name || p.__name.replace(/\d/, ''));
   console.log(p);
   console.log(currentPage.value);
@@ -203,15 +217,15 @@ function changePage(p) {
 .pageTran-enter-from {
   opacity: 0;
   scale: 50% 75%;
-  /* rotate: 5deg; */
-  rotate: x 90deg;
+  rotate: 5deg;
+  /* rotate: x 90deg; */
   translate: 0 5rem;
 }
 .pageTran-leave-to {
   opacity: 0;
   scale: 50% 75%;
-  /* rotate: 5deg; */
-  rotate: x 90deg;
+  rotate: 5deg;
+  /* rotate: x 90deg; */
   translate: 0 -5rem;
 }
 
