@@ -32,13 +32,6 @@
               </v-dialog>
               {{ mom }}
             </v-app-bar-nav-icon>
-            <v-btn-toggle divided v-model="test" mandatory="force">
-            <v-col>BG testing:</v-col>
-              <v-btn value="0">0</v-btn>
-              <v-btn value="1">1</v-btn>
-              <v-btn value="2">2</v-btn>
-              <v-btn value="3">3</v-btn>
-            </v-btn-toggle>
           </v-col>
 
           <v-col class="justify-center">
@@ -64,31 +57,13 @@
 
     <v-main>
       <v-sheet color="background">
-        <v-container v-if="test == 0" class="fill-height">
+        <v-container class="fill-height">
           <v-sheet>
             <transition appear name="pageTran" mode="out-in">
               <component :is="currentPage"/>
             </transition>
           </v-sheet>
         </v-container>
-
-        <v-container v-if="test == 1" class="fill-height">
-          <v-sheet color="background">
-            <transition appear name="pageTran" mode="out-in">
-              <component :is="currentPage"/>
-            </transition>
-          </v-sheet>
-        </v-container>
-
-        <v-sheet v-if="test == 2">
-          <transition appear name="pageTran" mode="out-in">
-            <component :is="currentPage"/>
-          </transition>
-        </v-sheet>
-
-        <transition v-if="test == 3" appear name="page" mode="out-in">
-          <component :is="currentPage"/>
-        </transition>
       </v-sheet>
     </v-main>
 
@@ -108,7 +83,7 @@
       <v-container padding="0px">
         <v-row padding="0px" no-gutters justify="start">
           <div v-for="page in pageList" class="my-n16 py-n16 pe-5 ms-0 me-n4" cols="1">
-            <v-sheet class="nav" :style="{opacity: currentPage == page ? 1 : 0.65}" @click="currentPage = page">
+            <v-sheet tabindex="1" class="nav" :style="{opacity: currentPage == page ? 1 : 0.65}" @click="changePage(page)"><!--  @click="currentPage = page"> -->
               {{ page.name || page.__name.replace(/\d/, '') }}
             </v-sheet>
           </div>
@@ -145,6 +120,8 @@ console.log(Papa);
 const pageList = Object.entries(import.meta.glob('./components/[0-9]+*.vue')).map(e => {return eval(e[0].split('/').pop()!.replace(/\.\w+$|\d/g, ''))});
 const currentPage = shallowRef<object>(MainPage);
 
+console.log(window.location);
+
 
 const dialog = ref<boolean>(false);
 const barBorder = ref<number>(300);
@@ -157,8 +134,6 @@ const dark = theme.global.name;
 const hello = ref<string>('HELLO');
 const dgMsg = ref<string>('roflmao');
 // mobileBreakpoint.value = 'sm';
-
-const test = ref<int>(0);
 
 function pageSwitch() {
   currentPage.value = currentPage.value == MainPage ? HelloWorld : MainPage;
@@ -175,10 +150,14 @@ function dgHi() {
 function changePage(p) {
   console.log('change');
   console.log(p);
-  currentPage.value = p.value;
+  console.log(currentPage.value);
+  currentPage.value = p;
+  window.location.pathname = "/" + (p.name || p.__name.replace(/\d/, ''));
   console.log(p);
+  console.log(currentPage.value);
   console.log('cur');
   console.log(currentPage);
+  console.log(window.location.pathname);
 }
 
 
