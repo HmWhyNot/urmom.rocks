@@ -45,7 +45,7 @@
               <v-switch class="d-flex flex-row-reverse" :label="dark" hide-details width="min" v-model="theme.global.name" true-value="light" false-value="dark"/>
               <v-hover v-slot="{ isHovering, props }">
                 <v-card v-bind="props" :style="isHovering ? { opacity: 1 } : { opacity: 0 }" class="dad">
-                  <div @click="pageSwitch" v-if="isHovering">dad</div>
+                  <div @click="[currentPage, dadPage] = [dadPage, currentPage]" v-if="isHovering">dad</div>
                 </v-card>
               </v-hover>
             </v-row>
@@ -119,6 +119,7 @@ import Papa from './components/2Papa.vue'
 console.log(Papa);
 const pageList = Object.entries(import.meta.glob('./components/[0-9]+*.vue')).map(e => {return eval(e[0].split('/').pop()!.replace(/\.\w+$|\d/g, ''))});
 const currentPage = shallowRef<object>(MainPage);
+const dadPage = shallowRef<object>(HelloWorld);
 
 console.log(window.location);
 
@@ -152,7 +153,7 @@ function changePage(p) {
   console.log(p);
   console.log(currentPage.value);
   currentPage.value = p;
-  window.location.pathname = "/" + (p.name || p.__name.replace(/\d/, ''));
+  // window.location.pathname = "/" + (p.name || p.__name.replace(/\d/, ''));
   console.log(p);
   console.log(currentPage.value);
   console.log('cur');
