@@ -84,7 +84,7 @@
 
       <v-container padding="0px">
         <v-row padding="0px" no-gutters justify="start">
-          <div v-for="page in router.getRoutes()" class="my-n16 py-n16 pe-5 ms-0 me-n4" cols="1">
+          <div v-for="page in pageList" class="my-n16 py-n16 pe-5 ms-0 me-n4" cols="1">
             <v-sheet tabindex="1" class="nav" :style="{opacity: route.name == page.name ? 1 : 0.65}" @click="changePage(page)">
               {{ page.name.replace(/([A-Z])/g, ' $1').trim() }}
             </v-sheet>
@@ -115,19 +115,11 @@ import { ref, shallowRef, onMounted, defineAsyncComponent, getCurrentInstance, w
 import { useDisplay, useTheme } from 'vuetify'
 import { useRouter, useRoute } from 'vue-router'
 
-// Import page components
-import MainPage from './components/0MainPage.vue'
-import HelloWorld from './components/HelloWorld.vue'
-import Papa from './components/1Papa.vue'
-console.log(Papa);
-// const pageList = Object.entries(import.meta.glob('./components/[0-9]+*.vue')).map(e => {return eval(e[0].split('/').pop()!.replace(/\.\w+$|\d/g, ''))});
-const currentPage = shallowRef<object>(MainPage);
-const dadPage = shallowRef<object>(HelloWorld);
-
 
 const router = useRouter()
 const route = useRoute()
-const pageList = route;
+const pageList = router.getRoutes().filter(r => { return r.path });
+console.log(pageList);
 
 
 const dialog = ref<boolean>(false);
@@ -142,9 +134,9 @@ const hello = ref<string>('HELLO');
 const dgMsg = ref<string>('roflmao');
 // mobileBreakpoint.value = 'sm';
 
-function pageSwitch() {
-  currentPage.value = currentPage.value == MainPage ? HelloWorld : MainPage;
-}
+// function pageSwitch() {
+//   currentPage.value = currentPage.value == MainPage ? HelloWorld : MainPage;
+// }
 
 function dgHi() {
   dgMsg.value = 'How rude!!';
@@ -162,7 +154,7 @@ function changePage(p) {
   router.push(
     { name: p.name, path: `/${p.name}`}
   );
-  dadPage.value = HelloWorld;
+  // dadPage.value = HelloWorld;
   console.log('cur');
   console.log(route);
 }
