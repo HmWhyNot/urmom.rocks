@@ -62,7 +62,6 @@
             <router-view v-slot="{ Component }" v-model="currentPage">
               <transition appear name="pageTran" mode="out-in">
                 <component :is="Component"/>
-                <!-- <router-view v-model="currentPage"/> -->
               </transition>
             </router-view>
           </v-sheet>
@@ -85,9 +84,9 @@
 
       <v-container padding="0px">
         <v-row padding="0px" no-gutters justify="start">
-          <div v-for="page in pageList" class="my-n16 py-n16 pe-5 ms-0 me-n4" cols="1">
-            <v-sheet tabindex="1" class="nav" :style="{opacity: currentPage == page ? 1 : 0.65}" @click="changePage(page)">
-              {{ (page.name || page.__name.replace(/\d/, '')).replace(/([A-Z])/g, ' $1').trim() }}
+          <div v-for="page in router.getRoutes()" class="my-n16 py-n16 pe-5 ms-0 me-n4" cols="1">
+            <v-sheet tabindex="1" class="nav" :style="{opacity: route.name == page.name ? 1 : 0.65}" @click="changePage(page)">
+              {{ page.name.replace(/([A-Z])/g, ' $1').trim() }}
             </v-sheet>
           </div>
           <v-spacer cols="2"/>
@@ -121,17 +120,14 @@ import MainPage from './components/0MainPage.vue'
 import HelloWorld from './components/HelloWorld.vue'
 import Papa from './components/1Papa.vue'
 console.log(Papa);
-const pageList = Object.entries(import.meta.glob('./components/[0-9]+*.vue')).map(e => {return eval(e[0].split('/').pop()!.replace(/\.\w+$|\d/g, ''))});
+// const pageList = Object.entries(import.meta.glob('./components/[0-9]+*.vue')).map(e => {return eval(e[0].split('/').pop()!.replace(/\.\w+$|\d/g, ''))});
 const currentPage = shallowRef<object>(MainPage);
 const dadPage = shallowRef<object>(HelloWorld);
-
-console.log(window.location);
-console.log('oh');
-console.log(ref());
 
 
 const router = useRouter()
 const route = useRoute()
+const pageList = route;
 
 
 const dialog = ref<boolean>(false);
@@ -161,18 +157,14 @@ function dgHi() {
 function changePage(p) {
   console.log('change');
   console.log(p);
-  console.log(currentPage.value);
-  // currentPage.value = p;
+  console.log(route);
+  console.log(route.name);
   router.push(
-    { name: p.__name.replace(/\d/, ''), path: `/${p.__name.replace(/\d/, '')}`}
+    { name: p.name, path: `/${p.name}`}
   );
   dadPage.value = HelloWorld;
-  // window.location.pathname = "/" + (p.name || p.__name.replace(/\d/, ''));
-  console.log(p);
-  console.log(currentPage.value);
   console.log('cur');
-  console.log(currentPage);
-  console.log(window.location.pathname);
+  console.log(route);
 }
 
 

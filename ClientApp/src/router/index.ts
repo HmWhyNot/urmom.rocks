@@ -5,7 +5,8 @@ import Papa from '../components/1Papa.vue'
 
 const routes = [
     { path: '/', name: 'MainPage', component: MainPage },
-    { path: '/papa', name: 'Papa', component: Papa }
+    { path: '/papa', name: 'Papa', component: Papa },
+    { name: 'HelloWorld', component: HelloWorld },
 ]
 
 const router = VueRouter.createRouter({
