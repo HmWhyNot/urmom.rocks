@@ -25,7 +25,7 @@
             target="_blank"
           >Discord Community</a>
         </p>
-        <div>Result: {{ result.test }}</div>
+        <div>Result: {{ result?.test || result }}</div>
       </v-col>
 
       <v-col
@@ -96,16 +96,18 @@
 
 
 <script setup lang='ts'>
-console.log('too');
+import * as Vue from 'vue'
 onMounted(async () => {
-  console.log('poo');
-  result.value = await (await fetch("/api/test")).json();
-  console.log('wow');
+  result.value = await (await fetch("/api/test")).json().catch((e) => {
+    console.log(e);
+    return e;
+  });
+  result.value
 });
 </script>
 
 <script lang='ts'>
-import { defineComponent, onMounted, ref } from 'vue'
+import { defineComponent, onMounted, ref, watch } from 'vue'
 
 // Logo
 import logo from '../assets/logo.svg'

@@ -45,7 +45,7 @@
               <v-switch class="d-flex flex-row-reverse" :label="dark" hide-details width="min" v-model="theme.global.name" true-value="light" false-value="dark"/>
               <v-hover v-slot="{ isHovering, props }">
                 <v-card v-bind="props" :style="isHovering ? { opacity: 1 } : { opacity: 0 }" class="dad">
-                  <div @click="[currentPage, dadPage] = [dadPage, currentPage]" v-if="isHovering">dad</div>
+                  <div @click="dad = !dad" v-if="isHovering">dad</div>
                 </v-card>
               </v-hover>
             </v-row>
@@ -59,9 +59,12 @@
       <v-sheet color="background">
         <v-container class="fill-height">
           <v-sheet>
-            <router-view v-slot="{ Component }" v-model="currentPage">
-              <transition appear name="pageTran" mode="out-in">
+            <router-view v-slot="{ Component }">
+              <transition v-if="!dad" appear name="pageTran" mode="out-in">
                 <component :is="Component"/>
+              </transition>
+              <transition v-if="dad" appear name="pageTran" mode="out-in">
+                <HelloWorld/>
               </transition>
             </router-view>
           </v-sheet>
@@ -111,15 +114,19 @@
 
 
 <script setup lang="ts">
+import * as Vue from 'vue'
 import { ref, shallowRef, onMounted, defineAsyncComponent, getCurrentInstance, watch } from 'vue'
+import * as Vuetify from 'vuetify'
 import { useDisplay, useTheme } from 'vuetify'
-import { useRouter, useRoute } from 'vue-router'
+import * as VRoute from 'vue-router'
+import { useRouter, useRoute, RouteRecordNormalized } from 'vue-router'
+import HelloWorld from './components/HelloWorld.vue'
 
 
 const router = useRouter()
 const route = useRoute()
-const pageList = router.getRoutes().filter(r => { return r.path });
-console.log(pageList);
+const pageList = router.getRoutes().filter(r => { return r.path !== '' });
+console.log(router.getRoutes());
 
 
 const dialog = ref<boolean>(false);
@@ -132,31 +139,21 @@ const theme = useTheme();
 const dark = theme.global.name;
 const hello = ref<string>('HELLO');
 const dgMsg = ref<string>('roflmao');
+const dad = ref<boolean>(false);
 // mobileBreakpoint.value = 'sm';
 
-// function pageSwitch() {
-//   currentPage.value = currentPage.value == MainPage ? HelloWorld : MainPage;
-// }
 
 function dgHi() {
   dgMsg.value = 'How rude!!';
-  console.log(currentPage);
   setTimeout(() => {
     dgMsg.value = 'roflmao';
   }, 2000);
 }
 
-function changePage(p) {
-  console.log('change');
-  console.log(p);
-  console.log(route);
-  console.log(route.name);
-  router.push(
-    { name: p.name, path: `/${p.name}`}
-  );
-  // dadPage.value = HelloWorld;
-  console.log('cur');
-  console.log(route);
+function changePage(p: RouteRecordNormalized) {
+  // router.push(
+  router.replace(p);
+  dad.value = false;
 }
 
 
