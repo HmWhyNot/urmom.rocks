@@ -90,9 +90,14 @@
       <v-container padding="0px">
         <v-row padding="0px" no-gutters justify="start">
           <div v-for="page in pageList" class="my-n16 py-n16 pe-5 ms-0 me-n4" cols="1">
-            <v-sheet tabindex="1" class="nav" :style="{opacity: route.name == page.name ? 1 : 0.65}" @click="changePage(page)">
+            <!-- <v-btn color="ui3" :to="page" replace> -->
+              <router-link class="nav-link" :to="page"/>
+            <v-sheet role="v-btn" tabindex="0" class="nav" :style="{opacity: route.name == page.name ? 1 : 0.65}" @click="changePage(page)">
+              <!-- <router-link :to="page"> -->
               {{ page.name!.toString().replace(/([A-Z])/g, ' $1').trim() }}
+              <!-- </router-link> -->
             </v-sheet>
+          <!-- </v-btn> -->
           </div>
           <v-spacer cols="2"/>
         </v-row>
@@ -116,6 +121,10 @@
 
 
 <script setup lang="ts">
+// https://stackoverflow.com/questions/12529837/using-a-div-as-a-link-option-to-open-new-tab
+
+
+
 import * as Vue from 'vue'
 import { ref, shallowRef, onMounted, defineAsyncComponent, getCurrentInstance, watch } from 'vue'
 import * as Vuetify from 'vuetify'
@@ -186,12 +195,21 @@ function changePage(p: RouteRecordNormalized) {
   user-select: none;
   opacity: 0.5;
   width: 6vi;
+  text-decoration: none;
   /* font-size: 2vi; */
 }
 .nav:hover {
   opacity: 1;
   background-color: rgb(var(--v-theme-ui1));
   color: rgb(var(--v-theme-ui3));
+}
+
+.nav-link {
+  position:absolute;
+  top:0px;
+  left:0px;
+  width:100%;
+  height:100%;
 }
 
 .pageTran-enter-to,
