@@ -3,8 +3,8 @@
     <!-- <v-sheet color="background"> -->
         <!-- <v-container class="fill-height"> -->
             <!-- <v-sheet> -->
-                <v-row justify="center" class="fill-height text-h1">
-                    <h1>no u</h1>
+                <v-row justify="center" class="fill-height">
+                    <h1 class="nou">no u</h1>
                 </v-row>
             <!-- </v-sheet> -->
         <!-- </v-container> -->
@@ -14,9 +14,14 @@
 
 <script setup lang='ts'>
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 </script>
 
 <style>
+.nou {
+    font-size: 25vw;
+    user-select: none;
+}
 
 </style>
