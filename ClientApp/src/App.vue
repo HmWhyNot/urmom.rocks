@@ -55,6 +55,7 @@
       </v-container>
     </v-app-bar>
 
+
     <v-main>
       <v-sheet color="background">
         <v-container class="fill-height">
@@ -71,6 +72,7 @@
         </v-container>
       </v-sheet>
     </v-main>
+    
 
     <v-footer app color="ui2">
       <v-sheet @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" color="ui3" height="40" width="45">
@@ -89,7 +91,7 @@
         <v-row padding="0px" no-gutters justify="start">
           <div v-for="page in pageList" class="my-n16 py-n16 pe-5 ms-0 me-n4" cols="1">
             <v-sheet tabindex="1" class="nav" :style="{opacity: route.name == page.name ? 1 : 0.65}" @click="changePage(page)">
-              {{ page.name.replace(/([A-Z])/g, ' $1').trim() }}
+              {{ page.name!.toString().replace(/([A-Z])/g, ' $1').trim() }}
             </v-sheet>
           </div>
           <v-spacer cols="2"/>
@@ -125,8 +127,10 @@ import HelloWorld from './components/HelloWorld.vue'
 
 const router = useRouter()
 const route = useRoute()
-const pageList = router.getRoutes().filter(r => { return r.path !== '' });
-console.log(router.getRoutes());
+const pageList = router.getRoutes().filter(r => { return (!r.path.includes('/', 1)) && (!r.path.includes(':noPage')) });
+console.log(router);
+console.log(route);
+console.log(pageList);
 
 
 const dialog = ref<boolean>(false);
@@ -181,6 +185,8 @@ function changePage(p: RouteRecordNormalized) {
   line-height: 50px;
   user-select: none;
   opacity: 0.5;
+  width: 6vi;
+  /* font-size: 2vi; */
 }
 .nav:hover {
   opacity: 1;
@@ -189,8 +195,7 @@ function changePage(p: RouteRecordNormalized) {
 }
 
 .pageTran-enter-to,
-.pageTran-leave-from {
-}
+.pageTran-leave-from,
 .pageTran-enter-active,
 .pageTran-leave-active {
   transition: all 0.15s ease;
