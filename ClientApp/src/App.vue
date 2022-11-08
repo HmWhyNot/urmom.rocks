@@ -50,7 +50,6 @@
               </v-hover>
             </v-row>
           </v-col>
-          <!-- <div @mouseover="dad" @mouseleave="dad" @click="pageSwitch" class="d-flex dad">dad</div> -->
         </v-row>
       </v-container>
     </v-app-bar>
@@ -61,11 +60,8 @@
         <v-container class="fill-height">
           <v-sheet>
             <router-view v-slot="{ Component }">
-              <transition v-if="!dad" appear name="pageTran" mode="out-in">
-                <component :is="Component"/>
-              </transition>
-              <transition v-if="dad" appear name="pageTran" mode="out-in">
-                <HelloWorld/>
+              <transition appear name="pageTran" mode="out-in">
+                <component :is="dad ? HelloWorld : Component"/>
               </transition>
             </router-view>
           </v-sheet>
@@ -89,15 +85,12 @@
 
       <v-container padding="0px">
         <v-row padding="0px" no-gutters justify="start">
-          <div v-for="page in pageList" class="my-n16 py-n16 pe-5 ms-0 me-n4" cols="1">
-            <!-- <v-btn color="ui3" :to="page" replace> -->
-              <router-link class="nav-link" :to="page"/>
-            <v-sheet role="v-btn" tabindex="0" class="nav" :style="{opacity: route.name == page.name ? 1 : 0.65}" @click="changePage(page)">
-              <!-- <router-link :to="page"> -->
-              {{ page.name!.toString().replace(/([A-Z])/g, ' $1').trim() }}
-              <!-- </router-link> -->
-            </v-sheet>
-          <!-- </v-btn> -->
+          <div v-for="page in pageList" class="my-n16 py-n17 pe-6 ms-0 me-n4" cols="1">
+            <router-link class="nav-link" tag="div" :to="page" replace>
+              <v-sheet @click="dad = false" tabindex="0" class="nav" :style="{opacity: route.name == page.name ? 1 : 0.65}">
+                {{ page.name!.toString().replace(/([A-Z])/g, ' $1').trim() }}
+              </v-sheet>
+            </router-link>
           </div>
           <v-spacer cols="2"/>
         </v-row>
@@ -121,10 +114,6 @@
 
 
 <script setup lang="ts">
-// https://stackoverflow.com/questions/12529837/using-a-div-as-a-link-option-to-open-new-tab
-
-
-
 import * as Vue from 'vue'
 import { ref, shallowRef, onMounted, defineAsyncComponent, getCurrentInstance, watch } from 'vue'
 import * as Vuetify from 'vuetify'
@@ -136,7 +125,7 @@ import HelloWorld from './components/HelloWorld.vue'
 
 const router = useRouter()
 const route = useRoute()
-const pageList = router.getRoutes().filter(r => { return (!r.path.includes('/', 1)) && (!r.path.includes(':noPage')) });
+const pageList = router.getRoutes().filter(r => { return (r.path.includes('/', 0)) && (!r.path.includes('/', 1)) && (!r.path.includes(':noPage')) });
 console.log(router);
 console.log(route);
 console.log(pageList);
@@ -163,12 +152,6 @@ function dgHi() {
   }, 2000);
 }
 
-function changePage(p: RouteRecordNormalized) {
-  // router.push(
-  router.replace(p);
-  dad.value = false;
-}
-
 
 </script>
 
@@ -191,7 +174,7 @@ function changePage(p: RouteRecordNormalized) {
   margin: 0px;
   padding: 0px 10px;
   text-align: center;
-  line-height: 50px;
+  line-height: 40px;
   user-select: none;
   opacity: 0.5;
   width: 6vi;
@@ -205,11 +188,8 @@ function changePage(p: RouteRecordNormalized) {
 }
 
 .nav-link {
-  position:absolute;
-  top:0px;
-  left:0px;
-  width:100%;
-  height:100%;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .pageTran-enter-to,

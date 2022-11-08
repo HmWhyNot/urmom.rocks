@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import MainPage from '../components/0MainPage.vue'
 import Papa from '../components/1Papa.vue'
 import NoPage from '../components/NoPage.vue'
+import HelloWorld from '../components/HelloWorld.vue'
 
 const routes: RouteRecordRaw[] = [
     { path: '/', name: 'MainPage', component: MainPage },
