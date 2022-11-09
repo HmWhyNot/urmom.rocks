@@ -1,13 +1,14 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import NoPage from '../components/NoPage.vue'
 import MainPage from '../components/0MainPage.vue'
 import Papa from '../components/1Papa.vue'
-import NoPage from '../components/NoPage.vue'
-import HelloWorld from '../components/HelloWorld.vue'
+import TicTacToe from '../components/2Tic-Tac-Toe.vue'
 
 const routes: RouteRecordRaw[] = [
+    { path: '/:noPage+', name: 'NoPage', component: NoPage },
     { path: '/', name: 'MainPage', component: MainPage },
     { path: '/papa', name: 'Papa', component: Papa },
-    { path: '/:noPage+', name: 'NoPage', component: NoPage },
+    { path: '/tic-tac-toe', name: 'TicTacToe', component: TicTacToe },
 ]
 
 export default createRouter({
