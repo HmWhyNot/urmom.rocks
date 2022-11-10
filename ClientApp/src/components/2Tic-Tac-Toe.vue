@@ -1,6 +1,6 @@
 <template>
     <v-container>
-        Tic Tac Toe
+        <canvas id="ttt">Tic Tac Toe</canvas>
     </v-container>
 </template>
 

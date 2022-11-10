@@ -6,7 +6,6 @@
             lol
           </v-row>
         </v-container>
-
         <v-menu style="user-select: none;" @mouseover="hello = 'HELLO'" @mouseleave="hello = 'GOODBYE'" absolute open-on-hover activator="parent" :close-on-content-click="false">
           {{ hello }}
         </v-menu>
@@ -28,10 +27,9 @@
       <v-sheet @mouseover="hello = 'GOODBYE'" @mouseleave="hello = 'HELLO'" color="ui3" height="40" width="45">
         <v-container class="fill-height">
           <v-row style="line-height: 2; user-select: none;" class="fill-height">
-            lol
+            {{ store.momCount }}
           </v-row>
         </v-container>
-
         <v-menu style="user-select: none;" @mouseover="hello = 'GOODBYE'" @mouseleave="hello = 'HELLO'" absolute open-on-hover activator="parent" :close-on-content-click="false">
           {{ hello }}
         </v-menu>
@@ -42,8 +40,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useMainStore } from '../stores/main'
 
 const props = defineProps({ dad: Boolean });
+const store = useMainStore();
 
 
 const router = useRouter()

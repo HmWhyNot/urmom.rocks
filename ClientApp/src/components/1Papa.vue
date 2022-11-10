@@ -6,9 +6,9 @@
 
 <script setup lang='ts'>
 import { ref } from 'vue'
-import { useStore } from '../stores/main'
+import { useMainStore } from '../stores/main'
 
-const store = useStore();
+const store = useMainStore();
 
 </script>
 

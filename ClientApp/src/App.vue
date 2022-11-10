@@ -31,8 +31,7 @@ import * as Vuetify from 'vuetify'
 import { useDisplay, useTheme } from 'vuetify'
 import * as VRoute from 'vue-router'
 import { useRouter } from 'vue-router'
-import { defineStore } from 'pinia'
-import { useStore } from './stores/main'
+import { useMainStore } from './stores/main'
 
 // Components
 import HelloWorld from './components/HelloWorld.vue'
@@ -46,7 +45,7 @@ const dad = ref<boolean>(false);
 
 router.afterEach(() => dad.value = false);
 
-console.log(useStore());
+console.log(useMainStore());
 
 
 </script>

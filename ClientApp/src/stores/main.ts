@@ -1,9 +1,20 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { useTheme } from 'vuetify'
 
-export const useStore = defineStore('main', () => {
-  const momText = ref<string>('');
-  const hi = ref<string>('hello')
+export const useMainStore = defineStore('main', () => {
 
-  return { momText, hi }
+  // support variables
+  const theme = useTheme();
+
+  // storage variables
+  const ret = {
+    momText: ref<string>(''),
+    momTextList: ref<Array<string>>([]),
+    hi: ref<string>('hello'),
+    dark: theme.global.name,
+    momCount: ref<number>(0),
+  };
+
+  return ret
 });
