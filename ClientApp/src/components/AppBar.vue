@@ -5,7 +5,7 @@
 
           <v-col class="justify-left" align="left">
             <v-app-bar-nav-icon @mouseover="mom = 'WOW'" @mouseleave="mom = 'MOM'">
-              <v-dialog label="woo" width="50%" class="text-center" v-model="dialog" activator="parent" :scrim="true" :fullscreen="mobile">
+              <v-dialog :interval="2000" label="woo" width="50%" class="text-center" v-model="dialog" activator="parent" :scrim="true" :fullscreen="mobile">
                 <v-sheet color="background">
                   <v-container>
                     <v-card :elevation="elevation">
@@ -87,12 +87,15 @@ const dgMsg = ref<string>('roflmao');
 
 function dgHi() {
   dgMsg.value = 'How rude!!';
-  store.momCount++;
-  store.momTextList.push(store.momText);
-  store.momText = '';
   setTimeout(() => {
     dgMsg.value = 'roflmao';
   }, 2000);
+
+  if (store.momText != '') {
+    store.momCount++;
+    store.momTextList.push(store.momText);
+    store.momText = '';
+  }
 }
 
 </script>
