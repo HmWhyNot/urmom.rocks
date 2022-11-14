@@ -46,8 +46,8 @@ const props = defineProps({ dad: Boolean });
 const store = useMainStore();
 
 
-const router = useRouter()
-const route = useRoute()
+const router = useRouter();
+const route = useRoute();
 const pageList = router.getRoutes().filter(r => { return (r.path.includes('/', 0)) && (!r.path.includes('/', 1)) && (!r.path.includes(':noPage')) });
 const hello = ref<string>('HELLO');
 const dad = ref<Boolean>(props.dad);
@@ -62,9 +62,9 @@ const dad = ref<Boolean>(props.dad);
   line-height: 40px;
   user-select: none;
   opacity: 0.5;
-  width: 6vi;
+  /* width: 7vi; */
   text-decoration: none;
-  /* font-size: 2vi; */
+  /* font-size: 1vi; */
 }
 .nav:hover {
   opacity: 1;

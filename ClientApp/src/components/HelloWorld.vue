@@ -99,7 +99,7 @@
 import * as Vue from 'vue'
 onMounted(async () => {
   result.value = await (await fetch("/api/test")).json().catch((e) => {
-    console.log(e);
+    console.error(e);
     return e;
   });
   result.value
