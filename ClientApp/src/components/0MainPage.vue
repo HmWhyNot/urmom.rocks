@@ -1,14 +1,12 @@
 <template>
     <v-container class="fill-height">
-    <!-- <v-sheet color="background"> -->
-        <!-- <v-container class="fill-height"> -->
-            <!-- <v-sheet> -->
+            <v-sheet>
+
                 <v-row justify="center" class="fill-height">
                     <h1 class="nou">no u</h1>
                 </v-row>
-            <!-- </v-sheet> -->
-        <!-- </v-container> -->
-    <!-- </v-sheet> -->
+                
+            </v-sheet>
     </v-container>
 </template>
 

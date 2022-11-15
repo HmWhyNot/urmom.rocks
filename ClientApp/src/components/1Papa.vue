@@ -1,6 +1,10 @@
 <template>
 <v-container class="fill-height">
-    <v-textarea v-model="store.hi" hide-details class="ta fill-height flex-column d-flex flex-grow-1" label="hi" autocomplete="username" counter auto-grow variant="solo"></v-textarea>
+    <v-sheet>
+
+        <v-textarea v-model="store.hi" hide-details class="ta fill-height flex-column d-flex flex-grow-1" label="hi" autocomplete="username" counter auto-grow variant="solo"></v-textarea>
+        
+    </v-sheet>
 </v-container>
 </template>
 

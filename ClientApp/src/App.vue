@@ -5,15 +5,11 @@
 
     <v-main>
       <v-sheet color="background">
-        <v-container class="fill-height">
-          <v-sheet>
-            <router-view v-slot="{ Component }">
-              <transition appear name="pageTran" mode="out-in">
-                <component :is="dad ? HelloWorld : Component"/>
-              </transition>
-            </router-view>
-          </v-sheet>
-        </v-container>
+        <router-view v-slot="{ Component }">
+          <transition appear name="pageTran" mode="out-in">
+            <component :is="dad ? HelloWorld : Component"/>
+          </transition>
+        </router-view>
       </v-sheet>
     </v-main>
 
