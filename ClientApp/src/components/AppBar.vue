@@ -68,7 +68,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useDisplay } from 'vuetify'
-import { useMainStore } from '../stores/main'
+import { useMainStore } from '@/stores/mainStore'
 
 // const props = defineProps({});
 const emit = defineEmits<{

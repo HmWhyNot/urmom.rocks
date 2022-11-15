@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useTheme } from 'vuetify'
 
-export const useMainStore = defineStore('main', () => {
+export const useMainStore = defineStore('mainStore', () => {
 
   // support variables
   const theme = useTheme();

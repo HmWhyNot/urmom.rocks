@@ -6,7 +6,7 @@
 
 <script setup lang='ts'>
 import { ref } from 'vue'
-import { useMainStore } from '../stores/main'
+import { useMainStore } from '@/stores/mainStore'
 
 const store = useMainStore();
 

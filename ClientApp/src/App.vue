@@ -31,12 +31,12 @@ import * as Vuetify from 'vuetify'
 import { useDisplay, useTheme } from 'vuetify'
 import * as VRoute from 'vue-router'
 import { useRouter } from 'vue-router'
-import { useMainStore } from './stores/main'
+import { useMainStore } from './stores/mainStore'
 
 // Components
-import HelloWorld from './components/HelloWorld.vue'
-import AppBar from './components/AppBar.vue'
-import NavBar from './components/NavBar.vue'
+import HelloWorld from '@/components/HelloWorld.vue'
+import AppBar from '@/components/AppBar.vue'
+import NavBar from '@/components/NavBar.vue'
 
 
 const router = useRouter()

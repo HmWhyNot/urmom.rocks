@@ -10,9 +10,12 @@
   },
   "dependencies": {
     "@mdi/font": "7.0.96",
+    "konva": "^8.3.14",
     "pinia": "^2.0.23",
     "roboto-fontface": "*",
+    "vite-tsconfig-paths": "^3.5.2",
     "vue": "^3.2.37",
+    "vue-konva": "^3.0.2",
     "vue-router": "^4.1.6",
     "vuetify": "^3.0.0-beta.0",
     "webfontloader": "^1.0.0"

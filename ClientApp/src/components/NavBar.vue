@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useMainStore } from '../stores/main'
+import { useMainStore } from '@/stores/mainStore'
 
 const props = defineProps({ dad: Boolean });
 const store = useMainStore();
