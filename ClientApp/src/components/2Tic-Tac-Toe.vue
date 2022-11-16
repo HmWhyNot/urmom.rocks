@@ -2,13 +2,18 @@
     <v-container class="fill-height">
         <v-sheet>
 
-            <v-container ref="con" id="con" alignment="center" justify="center" class="fill-height ma-0 pa-0">
+            <v-container ref="con" id="con" class="ma-0 pa-0 fill-height">
+                <v-row>
+                    <v-col align="center">
                 <div>{{ configKonva.width }} : {{ configKonva.height }}</div>
-                <v-stage ref="stage" :config="configKonva" @click="createCircle">
+                <v-stage ref="stage" :config="configKonva">
                     <v-layer id="layer" ref="layer">
-                        <v-circle :config="configCircle"></v-circle>
+                        <v-line v-for="line in lineGroup" :config="{stroke: 'white', strokeWidth: 1, points: line}"></v-line>
+                        <v-rect v-for="(square, i) in squareGroup" :key="'square' + i" :config="{fill: 'grey', opacity: 0.5, x: square.x, y: square.y, width: square.width, height: square.height}" @click="squareClick"></v-rect>
                     </v-layer> 
                 </v-stage>
+            </v-col>
+            </v-row>
             </v-container>
 
         </v-sheet>
@@ -21,12 +26,34 @@ import { VContainer } from 'vuetify/lib/components/index';
 import Konva from 'konva'
 import VKonva from 'vue-konva'
 import { isGloballyWhitelisted } from '@vue/shared';
+import { Vue } from 'vue-demi';
 
 
 const con = ref<VContainer>();
-const KWidth = ref<number>(500);
-const KHeight = ref<number>(500);
 const layer = ref<Konva.Layer>();
+const stage = ref<Konva.Stage>();
+const canvSize = { width: 600, height: 600 }
+const sqSize = {width: canvSize.width / 3, height: canvSize.height / 3}
+const lineGroup = ref<Array<Array<number>>>([
+    [sqSize.width, 0, sqSize.width, canvSize.height],
+    [sqSize.width * 2, 0, sqSize.width * 2, canvSize.height],
+    [0, sqSize.height, canvSize.width, sqSize.height],
+    [0, sqSize.height * 2, canvSize.width, sqSize.height * 2],
+])
+// const squareGroup = ref<Array<Array<number>>>([
+//     [0, 0, canvSize.width / 3, canvSize.height / 3],
+// ])
+const squareGroup = ref<Array<any>>([
+    { x: 0, y: 0, width: sqSize.width, height: sqSize.height },
+    { x: sqSize.width, y: 0, width: sqSize.width, height: sqSize.height },
+    { x: sqSize.width * 2, y: 0, width: sqSize.width, height: sqSize.height },
+    { x: 0, y: sqSize.height, width: sqSize.width, height: sqSize.height },
+    { x: sqSize.width, y: sqSize.height, width: sqSize.width, height: sqSize.height },
+    { x: sqSize.width * 2, y: sqSize.height, width: sqSize.width, height: sqSize.height },
+    { x: 0, y: sqSize.height * 2, width: sqSize.width, height: sqSize.height },
+    { x: sqSize.width, y: sqSize.height * 2, width: sqSize.width, height: sqSize.height },
+    { x: sqSize.width * 2, y: sqSize.height * 2, width: sqSize.width, height: sqSize.height },
+])
 
 console.log(Konva);
 console.log(VKonva);
@@ -34,32 +61,25 @@ console.log(VKonva);
 
 
 const configKonva = {
-    width: KWidth.value,
-    height: KHeight.value,
+    width: canvSize.width,
+    height: canvSize.height,
 }
-const configCircle: Konva.CircleConfig = {
-    radius: 70,
-    x: configKonva.width / 2,
-    y: configKonva.height / 2,
-    fill: "red",
-    stroke: "black",
-    strokeWidth: 4,
+// const lineConfig = {
+//     points: [100, 0, 100, configKonva.height],
+//     stroke: 'white',
+//     fill: 'white',
+//     strokeWidth: 5,
+
+// }
+
+function squareClick(e: any) {
+    console.warn(e)
+    console.log(e.target)
 }
 
-function createCircle(e: any) {
-    const x = ref<unknown>(e.evt.offsetX)
-    const y = ref<number>(e.evt.offsetY)
-    console.log(x);
-    console.log(y);
-    console.log(e);
-    console.log(e.evt);
-    console.log(e.evt.target);
-
-}
 
 onMounted(() => {
-    console.warn('Layer');
-    console.log(layer);
+    //
 })
 </script>
 
@@ -69,6 +89,12 @@ onMounted(() => {
     height: auto;
     background: rgba(255, 255, 255, 0.8);
     border: 1px solid grey;
+}
+#con {
+    align-items: center;
+    justify-items: center;
+    align-content: center;
+    justify-content: center;
 }
 
 </style>
