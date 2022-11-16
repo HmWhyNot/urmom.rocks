@@ -8,8 +8,11 @@
                 <div>{{ configKonva.width }} : {{ configKonva.height }}</div>
                 <v-stage ref="stage" :config="configKonva">
                     <v-layer id="layer" ref="layer">
-                        <v-line v-for="line in lineGroup" :config="{stroke: 'white', strokeWidth: 1, points: line}"></v-line>
-                        <v-rect v-for="(square, i) in squareGroup" :key="'square' + i" :config="{fill: 'grey', opacity: 0.5, x: square.x, y: square.y, width: square.width, height: square.height}" @click="squareClick"></v-rect>
+                        <v-line v-for="line in lineGroup" :config="{...configFrame, points: line}"></v-line>
+                        <v-group v-for="(square, i) in squareGroup" :key="'square' + i" v-props="state" :config="{...configSquare, ...square}" @click="state.value = 1">
+                            <v-circle v-if="state < 0" :config="configNaught"></v-circle>
+                            <v-line v-if="state > 0" :config="configCross"></v-line>
+                        </v-group>
                     </v-layer> 
                 </v-stage>
             </v-col>
@@ -34,6 +37,7 @@ const layer = ref<Konva.Layer>();
 const stage = ref<Konva.Stage>();
 const canvSize = { width: 600, height: 600 }
 const sqSize = {width: canvSize.width / 3, height: canvSize.height / 3}
+console.log(sqSize);
 const lineGroup = ref<Array<Array<number>>>([
     [sqSize.width, 0, sqSize.width, canvSize.height],
     [sqSize.width * 2, 0, sqSize.width * 2, canvSize.height],
@@ -63,6 +67,30 @@ console.log(VKonva);
 const configKonva = {
     width: canvSize.width,
     height: canvSize.height,
+}
+const configFrame = {
+    stroke: 'white',
+    strokeWidth: 2
+}
+const configSquare = {
+    fill: 'grey',
+    opacity: 0.5
+}
+const configNaught = {
+    stroke: 'white',
+    strokeWidth: 2,
+    radius: sqSize.width / 3,
+    x: sqSize.width / 2,
+    y: sqSize.height / 2
+}
+const configCross = {
+    stroke: 'white',
+    strokeWidth: 2,
+    points: [sqSize.width / 2 - configNaught.radius, sqSize.height / 2 - configNaught.radius,
+             sqSize.width / 2 + configNaught.radius, sqSize.height / 2 + configNaught.radius,
+             sqSize.width / 2, sqSize.height / 2,
+             sqSize.width / 2 - configNaught.radius, sqSize.height / 2 + configNaught.radius,
+             sqSize.width / 2 + configNaught.radius, sqSize.height / 2 - configNaught.radius,]
 }
 // const lineConfig = {
 //     points: [100, 0, 100, configKonva.height],
