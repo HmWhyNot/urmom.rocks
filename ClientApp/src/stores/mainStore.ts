@@ -14,5 +14,10 @@ export const useMainStore = defineStore('mainStore', () => {
     hi: ref<string>('hello'),
     dark: theme.global.name,
     momCount: ref<number>(0),
+    ticTacToe: {
+      gameState: [0, 0, 0,
+                  0, 0, 0,
+                  0, 0, 0,]
+    }
   };
 });
