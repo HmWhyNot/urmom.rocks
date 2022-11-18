@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { useTheme } from 'vuetify'
 
 export const useMainStore = defineStore('mainStore', () => {
@@ -14,10 +14,11 @@ export const useMainStore = defineStore('mainStore', () => {
     hi: ref<string>('hello'),
     dark: theme.global.name,
     momCount: ref<number>(0),
-    ticTacToe: {
-      gameState: [0, 0, 0,
-                  0, 0, 0,
-                  0, 0, 0,]
-    }
+    ticTacToe: ref({
+      field: [0, 0, 0,
+              0, 0, 0,
+              0, 0, 0,],
+      player: 1
+    })
   };
 });
