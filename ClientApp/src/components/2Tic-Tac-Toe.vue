@@ -15,7 +15,10 @@
                   <v-line v-if="gameState.field[i] < 0" :config="configCross" />
                   <v-rect :config="{...configSquare, opacity: 0}"/>
                 </v-group>
-                <v-text :config="configEndText"/>
+                <v-group v-if="winLine != 'none'">
+                  <v-rect/>
+                  <v-text :config="{ ...configEndText, text: playerList[gameState.player + 1] + ' won!' }"/>
+                </v-group>
               </v-layer>
             </v-stage>
           </v-col>
@@ -66,6 +69,7 @@ const gameState: {[key: string]: any} = store.ticTacToe
 const winLine = ref<'top' | 'h-mid' | 'bottom' |
                     'left' | 'v-mid' | 'right' |
                     'left-right-diag' | 'right-left-diag' | 'none'>('none')
+const playerList = ref<string[]>(['Crosses', 'No one', 'Naughts']);
 
 
 // object configs
@@ -102,12 +106,14 @@ const configCross = {
   sqSize.width / 2 + configNaught.radius, sqSize.height / 2 - configNaught.radius,]
 }
 const configEndText = {
-  text: 'Player wins!',
+  text: 'Player ' + gameState.player + ' wins!',
   // stroke: colors.ui3,
   fill: colors.ui3,
   fontSize: 48,
-  aling: 'center',
+  align: 'center',
   verticalAlign: 'middle',
+  width: canvSize.width,
+  height: canvSize.height,
 }
 
 
