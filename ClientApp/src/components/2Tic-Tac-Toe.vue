@@ -5,19 +5,19 @@
       <v-container ref="con" id="con" class="ma-0 pa-0 fill-height">
         <v-row>
           <v-col align="center">
-            <div>Current Player: {{ (gameState.player > 0) ? 'Naughts' : 'Crosses' }}</div>
+            <div>Current Player: {{ (gameState.player < 0) ? 'Naughts' : 'Crosses' }}</div>
             <v-stage ref="stage" :config="configKonva">
               <v-layer id="layer" ref="layer">
                 <v-line v-for="line in frameGroup" :config="{ ...configFrame, points: line }" />
                 <v-line :config="{ ...configFrame, points: winLineGroup[winLine] }"/>
                 <v-group v-for="(square, i) in squareGroup" :key="'square' + i" :config="{ ...configSquare, ...square }" @click="squareClick(i)">
-                  <v-circle v-if="gameState.field[i] > 0" :config="configNaught" />
-                  <v-line v-if="gameState.field[i] < 0" :config="configCross" />
+                  <v-circle v-if="gameState.field[i] < 0" :config="configNaught" />
+                  <v-line v-if="gameState.field[i] > 0" :config="configCross" />
                   <v-rect :config="{...configSquare, opacity: 0}"/>
                 </v-group>
-                <v-group v-if="winLine != 'none'">
+                <v-group v-if="winLine != 'none' || gameState.player == 0">
                   <v-rect/>
-                  <v-text :config="{ ...configEndText, text: playerList[gameState.player + 1] + ' won!' }"/>
+                  <v-text :config="{ ...configEndText, text: winMessages[gameState.player + 1] }"/>
                 </v-group>
               </v-layer>
             </v-stage>
@@ -68,8 +68,8 @@ const sqSize = { width: canvSize.width / 3, height: canvSize.height / 3 };
 const gameState: {[key: string]: any} = store.ticTacToe
 const winLine = ref<'top' | 'h-mid' | 'bottom' |
                     'left' | 'v-mid' | 'right' |
-                    'left-right-diag' | 'right-left-diag' | 'none'>('none')
-const playerList = ref<string[]>(['Crosses', 'No one', 'Naughts']);
+                    'left-right-diag' | 'right-left-diag' | 'none' | ''>('')
+const winMessages = ref<string[]>(['Naughts wins!', "Cat's game", 'Crosses wins!']);
 
 
 // object configs
@@ -106,7 +106,6 @@ const configCross = {
   sqSize.width / 2 + configNaught.radius, sqSize.height / 2 - configNaught.radius,]
 }
 const configEndText = {
-  text: 'Player ' + gameState.player + ' wins!',
   // stroke: colors.ui3,
   fill: colors.ui3,
   fontSize: 48,
@@ -158,13 +157,15 @@ function squareClick(i: number) {
   winLine.value = checkWin(gameState.field);
   console.log(winLine.value)
 
-  // clear field if full
-  if (gameState.field.reduce((p: number, c: number) => { return p * c }) != 0 || winLine.value != 'none' ) {
+  // clear field if full or win
+  if (winLine.value != '' ) {
+    console.log('here')
     setTimeout(() => {
       gameState.field.fill(0);
       gameState.player = 1;
-      winLine.value = 'none';
-      gameState.player = gameState.player * -1;
+      console.log(gameState.player)
+      winLine.value = '';
+      console.log(gameState.player)
       console.warn('clear')
     }, 3000)
     return
@@ -175,6 +176,9 @@ function squareClick(i: number) {
 
 function checkWin(s: number[]) {
   // don't hate me. this works. get over it
+  if (s.reduce((p: number, c: number) => { return p * c }) != 0) {
+    return 'none'
+  }
   switch (9) {
     case ((s[0] + s[1] + s[2]) ** 2):
       return 'top';
@@ -193,7 +197,7 @@ function checkWin(s: number[]) {
     case ((s[2] + s[4] + s[6]) ** 2):
       return 'right-left-diag';
     default:
-        return 'none'      
+        return ''      
   }
 }
 
