@@ -15,10 +15,12 @@
                   <v-line v-if="gameState.field[i] > 0" :config="configCross" />
                   <v-rect :config="{...configSquare, opacity: 0}"/>
                 </v-group>
-                <v-group v-if="winLine != 'none' || gameState.player == 0">
-                  <v-rect/>
-                  <v-text :config="{ ...configEndText, text: winMessages[gameState.player + 1] }"/>
+                <v-animation>
+                <v-group v-if="winLine != ''">
+                  <v-rect :config="configMsgBox"/>
+                  <v-text :config="{ ...configMsgText, text: winMessages[gameState.player + 1] }"/>
                 </v-group>
+                </v-animation>
               </v-layer>
             </v-stage>
           </v-col>
@@ -68,7 +70,7 @@ const sqSize = { width: canvSize.width / 3, height: canvSize.height / 3 };
 const gameState: {[key: string]: any} = store.ticTacToe
 const winLine = ref<'top' | 'h-mid' | 'bottom' |
                     'left' | 'v-mid' | 'right' |
-                    'left-right-diag' | 'right-left-diag' | 'none' | ''>('')
+                    'left-right-diag' | 'right-left-diag' | 'draw' | ''>('')
 const winMessages = ref<string[]>(['Naughts wins!', "Cat's game", 'Crosses wins!']);
 
 
@@ -78,7 +80,7 @@ const configKonva = {
   height: canvSize.height,
 }
 const configFrame = {
-  stroke: 'white',
+  stroke: colors.ui3,
   strokeWidth: 2
 }
 const configSquare = {
@@ -86,18 +88,17 @@ const configSquare = {
   opacity: 0.5,
   width: sqSize.width,
   height: sqSize.height,
-  state: 0
   // draggable: true
 }
 const configNaught = {
-  stroke: 'white',
+  stroke: colors.ui3,
   strokeWidth: 2,
   radius: sqSize.width / 3,
   x: sqSize.width / 2,
   y: sqSize.height / 2
 }
 const configCross = {
-  stroke: 'white',
+  stroke: colors.ui3,
   strokeWidth: 2,
   points: [sqSize.width / 2 - configNaught.radius, sqSize.height / 2 - configNaught.radius,
   sqSize.width / 2 + configNaught.radius, sqSize.height / 2 + configNaught.radius,
@@ -105,14 +106,24 @@ const configCross = {
   sqSize.width / 2 - configNaught.radius, sqSize.height / 2 + configNaught.radius,
   sqSize.width / 2 + configNaught.radius, sqSize.height / 2 - configNaught.radius,]
 }
-const configEndText = {
+const configMsgText = {
   // stroke: colors.ui3,
   fill: colors.ui3,
-  fontSize: 48,
+  fontSize: canvSize.width / 12,
   align: 'center',
   verticalAlign: 'middle',
   width: canvSize.width,
   height: canvSize.height,
+}
+const configMsgBox = {
+  // stroke: colors.ui2,
+  fill: colors.ui2,
+  width: canvSize.width / 1.5,
+  height: canvSize.height / 3,
+  x: canvSize.width / 6,
+  y: canvSize.height / 3,
+  opacity: .8,
+  shadowOffset: {x: canvSize.width / 20, y: canvSize.height / 20}
 }
 
 
@@ -135,7 +146,7 @@ const squareGroup = ref<squarePos[]>([
   { x: sqSize.width * 2, y: sqSize.height * 2 },
 ])
 const winLineGroup = ref<{[key: string]: number[]}>({
-  'none': [],
+  'draw': [],
   'top': [0, sqSize.height * 0.5, canvSize.width, sqSize.height * 0.5],
   'h-mid': [0, sqSize.height * 1.5, canvSize.width, sqSize.height * 1.5],
   'bottom': [0, sqSize.height * 2.5, canvSize.width, sqSize.height * 2.5],
@@ -159,13 +170,10 @@ function squareClick(i: number) {
 
   // clear field if full or win
   if (winLine.value != '' ) {
-    console.log('here')
     setTimeout(() => {
       gameState.field.fill(0);
       gameState.player = 1;
-      console.log(gameState.player)
       winLine.value = '';
-      console.log(gameState.player)
       console.warn('clear')
     }, 3000)
     return
@@ -176,9 +184,6 @@ function squareClick(i: number) {
 
 function checkWin(s: number[]) {
   // don't hate me. this works. get over it
-  if (s.reduce((p: number, c: number) => { return p * c }) != 0) {
-    return 'none'
-  }
   switch (9) {
     case ((s[0] + s[1] + s[2]) ** 2):
       return 'top';
@@ -196,9 +201,12 @@ function checkWin(s: number[]) {
       return 'left-right-diag';
     case ((s[2] + s[4] + s[6]) ** 2):
       return 'right-left-diag';
-    default:
-        return ''      
   }
+  if (s.reduce((p: number, c: number) => { return p * c }) != 0) {
+    gameState.player = 0;
+    return 'draw';
+  }
+  return '';
 }
 
 
