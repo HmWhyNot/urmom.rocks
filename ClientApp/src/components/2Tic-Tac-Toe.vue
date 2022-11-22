@@ -9,18 +9,16 @@
             <v-stage ref="stage" :config="configKonva">
               <v-layer id="layer" ref="layer">
                 <v-line v-for="line in frameGroup" :config="{ ...configFrame, points: line }" />
-                <v-line :config="{ ...configFrame, points: winLineGroup[winLine] }"/>
+                <v-line ref="winLine" :config="{ ...configWinLine, ...winLineGroup[winLinePos] }"/>
                 <v-group v-for="(square, i) in squareGroup" :key="'square' + i" :config="{ ...configSquare, ...square }" @click="squareClick(i)">
                   <v-circle v-if="gameState.field[i] < 0" :config="configNaught" />
                   <v-line v-if="gameState.field[i] > 0" :config="configCross" />
                   <v-rect :config="{...configSquare, opacity: 0}"/>
                 </v-group>
-                <v-animation>
-                <v-group v-if="winLine != ''">
+                <v-group ref="msgBox" v-if="winLinePos != ''">
                   <v-rect :config="configMsgBox"/>
                   <v-text :config="{ ...configMsgText, text: winMessages[gameState.player + 1] }"/>
                 </v-group>
-                </v-animation>
               </v-layer>
             </v-stage>
           </v-col>
@@ -58,6 +56,8 @@ interface squarePos {
 const con = ref<VContainer>();
 const layer = ref<Konva.Layer>();
 const stage = ref<Konva.Stage>();
+const msgBox = ref<Konva.Group>();
+const winLine = ref<Konva.Line>();
 
 // sizing constants
 const canvSize = { width: 600, height: 600 };
@@ -68,7 +68,7 @@ const sqSize = { width: canvSize.width / 3, height: canvSize.height / 3 };
 ////////////////
 
 const gameState: {[key: string]: any} = store.ticTacToe
-const winLine = ref<'top' | 'h-mid' | 'bottom' |
+const winLinePos = ref<'top' | 'h-mid' | 'bottom' |
                     'left' | 'v-mid' | 'right' |
                     'left-right-diag' | 'right-left-diag' | 'draw' | ''>('')
 const winMessages = ref<string[]>(['Naughts wins!', "Cat's game", 'Crosses wins!']);
@@ -123,7 +123,8 @@ const configMsgBox = {
   x: canvSize.width / 6,
   y: canvSize.height / 3,
   opacity: .8,
-  shadowOffset: {x: canvSize.width / 20, y: canvSize.height / 20}
+  shadowOffsetX: canvSize.width / 25,
+  shadowOffsetY: canvSize.height / 25,
 }
 
 
@@ -145,16 +146,27 @@ const squareGroup = ref<squarePos[]>([
   { x: sqSize.width, y: sqSize.height * 2 },
   { x: sqSize.width * 2, y: sqSize.height * 2 },
 ])
-const winLineGroup = ref<{[key: string]: number[]}>({
-  'draw': [],
-  'top': [0, sqSize.height * 0.5, canvSize.width, sqSize.height * 0.5],
-  'h-mid': [0, sqSize.height * 1.5, canvSize.width, sqSize.height * 1.5],
-  'bottom': [0, sqSize.height * 2.5, canvSize.width, sqSize.height * 2.5],
-  'left': [sqSize.width * 0.5, 0, sqSize.width * 0.5, canvSize.height],
-  'v-mid': [sqSize.width * 1.5, 0, sqSize.width * 1.5, canvSize.height],
-  'right': [sqSize.width * 2.5, 0, sqSize.width * 2.5, canvSize.height],
-  'left-right-diag': [0, 0, canvSize.width, canvSize.height],
-  'right-left-diag': [canvSize.width, 0, 0, canvSize.height],
+const configWinLine = {
+  stroke: colors.ui3,
+  strokeWidth: 2,
+  points: [0, 0, canvSize.width * 1.4, 0],
+  x: 0,
+  y: 0,
+  scaleX: 0,
+  scaleY: 0,
+  rotation: 0,
+}
+const winLineGroup = ref<{ [key: string]: object }>({
+  '': {strokeWidth: 0},
+  'draw': {strokeWidth: 0},
+  'top': {x: 0, y: canvSize.height * 1/6},
+  'h-mid': {x: 0, y: canvSize.height * 3/6},
+  'bottom': {x: 0, y: canvSize.height * 5/6},
+  'left': {x: canvSize.width * 1/6, y: 0, rotation: 90},
+  'v-mid': {x: canvSize.width * 3/6, y: 0, rotation: 90},
+  'right': {x: canvSize.width * 5/6, y: 0, rotation: 90},
+  'left-right-diag': {x: 0, y: 0, rotation: 45},
+  'right-left-diag': {x: canvSize.width, y: 0, rotation: 135},
 })
 
 
@@ -163,23 +175,46 @@ function squareClick(i: number) {
   // place mark for current player
   if (gameState.field[i] == 0) {
     gameState.field[i] = gameState.player;
+    gameState.player = gameState.player * -1;
   }
 
-  winLine.value = checkWin(gameState.field);
-  console.log(winLine.value)
+  winLinePos.value = checkWin(gameState.field);
 
   // clear field if full or win
-  if (winLine.value != '' ) {
+  if (winLinePos.value != '') {
+    gameState.player = gameState.player * -1; // this is to keep the wiining player active
+    // msgBox appear animation
+    let msgBoxScale = 0;
+    let winLineScale = 0;
+    nextTick(() => {
+      const msgBoxNode = msgBox.value?.getNode();
+      const winLineNode = winLine.value?.getNode();
+      msgBoxNode.scale({ x: 0, y: 0 });
+      winLineNode.scale({ x: 0, y: 0 });
+      const anim = new Konva.Animation((f) => {
+        msgBoxScale += 3 / 16;
+        winLineScale += 1 / 16;
+        if (msgBoxScale >= 1) {
+          msgBoxScale = 1;
+        }
+        if (winLineScale >= 1) {
+          winLineScale = 1;
+          anim.stop()
+        }
+        msgBoxNode.scale({ x: msgBoxScale, y: msgBoxScale })
+        winLineNode.scale({ x: winLineScale, y: winLineScale })
+      }, msgBoxNode.getLayer());
+      anim.start();
+    })
+    
     setTimeout(() => {
       gameState.field.fill(0);
       gameState.player = 1;
-      winLine.value = '';
+      winLinePos.value = '';
       console.warn('clear')
     }, 3000)
     return
   }
-  //switches player
-  gameState.player = gameState.player * -1;
 }
 
 function checkWin(s: number[]) {
