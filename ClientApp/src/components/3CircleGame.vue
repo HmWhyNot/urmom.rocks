@@ -5,7 +5,7 @@
             <v-container ref="con" id="con" class="ma-0 pa-0 fill-height">
                 <v-row>
                     <v-col align="center">
-                <div>{{ configKonva.width }} : {{ configKonva.height }}</div>
+                <div>{{ count }}</div>
                 <v-stage ref="stage" :config="configKonva">
                     <v-layer id="layer" ref="layer">
                         <v-circle ref="cir" id="cir" @click="moveCircle" :config="configCircle"></v-circle>
@@ -34,6 +34,8 @@ const KHeight = ref<number>(500);
 const layer = ref<Konva.Layer>();
 const cir = ref<Konva.Circle>();
 const stage = ref<Konva.Stage>();
+const count = ref<number>(0);
+const gameStarted = ref<boolean>(false);
 
 console.log(Konva);
 console.log(VKonva);
@@ -64,8 +66,11 @@ function createCircle(e: any) {
 }
 
 function moveCircle(e: any) {
+    if (gameStarted.value) {
+        //
+    }
     e.target.position({x: Math.random() * configKonva.width, y: Math.random() * configKonva.height});
-
+    count.value += 1;
 }
 
 onMounted(() => {

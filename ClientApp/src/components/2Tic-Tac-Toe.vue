@@ -55,11 +55,11 @@ interface squarePos {
 }
 
 const con = ref<VContainer>();
-const layer = ref<Konva.Layer>();
-const stage = ref<Konva.Stage>();
-const msgBox = ref<Konva.Group>();
-const winLine = ref<Konva.Line>();
-const catsArc = ref<Konva.Arc>();
+const layer = ref();
+const stage = ref();
+const msgBox = ref();
+const winLine = ref();
+const catsArc = ref();
 
 // sizing constants
 const canvSize = { width: 600, height: 600 };
@@ -81,21 +81,40 @@ const configKonva = {
   width: canvSize.width,
   height: canvSize.height,
 }
+
 const configFrame = {
   stroke: colors.ui3,
   strokeWidth: 2
 }
+const frameGroup = ref<number[][]>([
+  [sqSize.width, 0, sqSize.width, canvSize.height],
+  [sqSize.width * 2, 0, sqSize.width * 2, canvSize.height],
+  [0, sqSize.height, canvSize.width, sqSize.height],
+  [0, sqSize.height * 2, canvSize.width, sqSize.height * 2],
+])
+
 const configSquare = {
   fill: 'grey',
   opacity: 0.5,
   width: sqSize.width,
   height: sqSize.height,
-  // draggable: true
 }
+const squareGroup = ref<squarePos[]>([
+  { x: 0, y: 0 },
+  { x: sqSize.width, y: 0 },
+  { x: sqSize.width * 2, y: 0 },
+  { x: 0, y: sqSize.height },
+  { x: sqSize.width, y: sqSize.height },
+  { x: sqSize.width * 2, y: sqSize.height },
+  { x: 0, y: sqSize.height * 2 },
+  { x: sqSize.width, y: sqSize.height * 2 },
+  { x: sqSize.width * 2, y: sqSize.height * 2 },
+])
+
 const configNaught = {
   stroke: colors.ui3,
   strokeWidth: 2,
-  radius: sqSize.width / 3,
+  radius: (sqSize.width + sqSize.height) / ((sqSize.width / sqSize.height) + (sqSize.height / sqSize.width)) * (1/3),
   x: sqSize.width / 2,
   y: sqSize.height / 2
 }
@@ -108,6 +127,7 @@ const configCross = {
   sqSize.width / 2 - configNaught.radius, sqSize.height / 2 + configNaught.radius,
   sqSize.width / 2 + configNaught.radius, sqSize.height / 2 - configNaught.radius,]
 }
+
 const configMsgText = {
   fill: colors.ui3,
   fontSize: canvSize.width / 12,
@@ -128,25 +148,6 @@ const configMsgBox = {
   shadowOffsetY: canvSize.height / 25,
 }
 
-
-// arrays for object positioning
-const frameGroup = ref<number[][]>([
-  [sqSize.width, 0, sqSize.width, canvSize.height],
-  [sqSize.width * 2, 0, sqSize.width * 2, canvSize.height],
-  [0, sqSize.height, canvSize.width, sqSize.height],
-  [0, sqSize.height * 2, canvSize.width, sqSize.height * 2],
-])
-const squareGroup = ref<squarePos[]>([
-  { x: 0, y: 0 },
-  { x: sqSize.width, y: 0 },
-  { x: sqSize.width * 2, y: 0 },
-  { x: 0, y: sqSize.height },
-  { x: sqSize.width, y: sqSize.height },
-  { x: sqSize.width * 2, y: sqSize.height },
-  { x: 0, y: sqSize.height * 2 },
-  { x: sqSize.width, y: sqSize.height * 2 },
-  { x: sqSize.width * 2, y: sqSize.height * 2 },
-])
 const configWinLine = {
   stroke: colors.ui3,
   strokeWidth: 2,
@@ -168,43 +169,32 @@ const winLineGroup = ref<{ [key: string]: object }>({
   'left-right-diag': {x: 0, y: 0, points: [0, 0, canvSize.width, canvSize.height]},
   'right-left-diag': {x: canvSize.width, y: 0, rotation: 90, points: [0, 0, canvSize.height, canvSize.width]},
 })
-// const winLineGroup = ref<{ [key: string]: object }>({
-//   '': {strokeWidth: 0},
-//   'draw': {strokeWidth: 0},
-//   'top': {x: 0, y: canvSize.height * 1/6},
-//   'h-mid': {x: 0, y: canvSize.height * 3/6},
-//   'bottom': {x: 0, y: canvSize.height * 5/6},
-//   'left': {x: canvSize.width * 1/6, y: 0, rotation: 90},
-//   'v-mid': {x: canvSize.width * 3/6, y: 0, rotation: 90},
-//   'right': {x: canvSize.width * 5/6, y: 0, rotation: 90},
-//   'left-right-diag': {x: 0, y: 0, rotation: 45},
-//   'right-left-diag': {x: canvSize.width, y: 0, rotation: 135},
-// })
+
 const configCatsArc = {
   angle: 0,
   stroke: colors.ui3,
   strokeWidth: 2,
-  x: canvSize.width * 9/16,
+  x: canvSize.width / 2,
   y: canvSize.height / 2,
-  innerRadius: 200,
-  outerRadius: 200,
+  innerRadius: configNaught.radius * 3.5,
+  outerRadius: configNaught.radius * 3.5,
   rotation: -60,
   clockwise: true
 }
 
 
 function squareClick(i: number) {
-  console.log('click');
-  // place mark for current player
+  // Place mark (X/O) for current player
   if (gameState.field[i] == 0) {
     gameState.field[i] = gameState.player;
     gameState.player = gameState.player * -1;
   }
 
+  // Check win/draw codition
   winLinePos.value = checkWin(gameState.field);
 
-  // clear field if full or win
-if (winLinePos.value != '') {
+  // if win/draw
+  if (winLinePos.value != '') {
     gameState.player = gameState.player * -1; // this is to keep the wiining player active
     // msgBox appear animation
     let msgBoxScale = 0;
@@ -221,46 +211,50 @@ if (winLinePos.value != '') {
       }, msgBoxNode.getLayer());
       msgBoxAnim.start();
     })
-  if (winLinePos.value == 'draw') {
-    let catsArcAngle = 0;
-    nextTick(() => {
-      const catsArcNode = catsArc.value?.getNode();
-      catsArcNode.angle(0);
-      const catsArcAnim = new Konva.Animation((f) => {
-        catsArcAngle -= 15
-        if (catsArcAngle <= -180) {
-          catsArcAngle = -240;
-          catsArcAnim.stop();
-        }
-        catsArcNode.angle(catsArcAngle);
-      }, catsArcNode.getLayer())
-      catsArcAnim.start();
-    });
-  }
-  else {
-    let winLineScale = 0;
-    nextTick(() => {
-      const winLineNode = winLine.value?.getNode();
-      // winLineNode.scaleX(0);
-      winLineNode.scale({ x:0, y: 0 });
-      const winLineAnim = new Konva.Animation((f) => {
-        winLineScale += 1 / 16;
-        if (winLineScale >= 1) {
-          winLineScale = 1;
-          winLineAnim.stop()
-        }
-        winLineNode.scale({ x: winLineScale, y: winLineScale })
-      }, winLineNode.getLayer());
-      winLineAnim.start();
-    })
-  }
-    
+
+    // if draw
+    if (winLinePos.value == 'draw') {
+      let catsArcAngle = 0;
+      nextTick(() => {
+        const catsArcNode = catsArc.value?.getNode();
+        catsArcNode.angle(0);
+        const catsArcAnim = new Konva.Animation((f) => {
+          catsArcAngle -= 15
+          if (catsArcAngle <= -180) {
+            catsArcAngle = -240;
+            catsArcAnim.stop();
+          }
+          catsArcNode.angle(catsArcAngle);
+        }, catsArcNode.getLayer())
+        catsArcAnim.start();
+      });
+    }
+
+    // if win
+    else {
+      let winLineScale = 0;
+      nextTick(() => {
+        const winLineNode = winLine.value?.getNode();
+        winLineNode.scale({ x:0, y: 0 });
+        const winLineAnim = new Konva.Animation((f) => {
+          winLineScale += 1 / 16;
+          if (winLineScale >= 1) {
+            winLineScale = 1;
+            winLineAnim.stop()
+          }
+          winLineNode.scale({ x: winLineScale, y: winLineScale })
+        }, winLineNode.getLayer());
+        winLineAnim.start();
+      })
+    }
+
+    // clear field after delay
     setTimeout(() => {
       gameState.field.fill(0);
       gameState.player = 1;
       winLinePos.value = '';
       console.warn('clear')
-    }, 3000)
+    }, 2000)
     return
   }
 }
