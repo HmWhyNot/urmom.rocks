@@ -8,14 +8,14 @@
             <div>Current Player: {{ (gameState.player < 0) ? 'Naughts' : 'Crosses' }}</div>
             <v-stage ref="stage" :config="configKonva">
               <v-layer id="layer" ref="layer">
-                <v-line v-for="line in frameGroup" :config="{ ...configFrame, points: line }" />
-                <v-line ref="winLine" :config="{ ...configWinLine, ...winLineGroup[winLinePos] }"/>
-                <v-arc ref="catsArc" :config="{ ...configCatsArc }"/>
+                <v-line v-for="line in frameGroup" :config="{ ...configFrame, points: line }"/>
                 <v-group v-for="(square, i) in squareGroup" :key="'square' + i" :config="{ ...configSquare, ...square }" @click="squareClick(i)">
                   <v-circle v-if="gameState.field[i] < 0" :config="configNaught" />
                   <v-line v-if="gameState.field[i] > 0" :config="configCross" />
                   <v-rect :config="{...configSquare, opacity: 0}"/>
                 </v-group>
+                <v-line ref="winLine" v-if="winLinePos != ''" :config="{ ...configWinLine, ...winLineGroup[winLinePos] }"/>
+                <v-arc ref="catsArc" v-if="winLinePos != ''" :config="{ ...configCatsArc }"/>
                 <v-group ref="msgBox" v-if="winLinePos != ''">
                   <v-rect :config="configMsgBox"/>
                   <v-text :config="{ ...configMsgText, text: winMessages[gameState.player + 1] }"/>
@@ -109,7 +109,6 @@ const configCross = {
   sqSize.width / 2 + configNaught.radius, sqSize.height / 2 - configNaught.radius,]
 }
 const configMsgText = {
-  // stroke: colors.ui3,
   fill: colors.ui3,
   fontSize: canvSize.width / 12,
   align: 'center',
@@ -118,7 +117,7 @@ const configMsgText = {
   height: canvSize.height,
 }
 const configMsgBox = {
-  // stroke: colors.ui2,
+  stroke: colors.ui3,
   fill: colors.ui2,
   width: canvSize.width / 1.5,
   height: canvSize.height / 3,
@@ -151,34 +150,46 @@ const squareGroup = ref<squarePos[]>([
 const configWinLine = {
   stroke: colors.ui3,
   strokeWidth: 2,
-  points: [0, 0, canvSize.width * 1.4, 0],
+  points: [0, 0, (canvSize.width + canvSize.height) / 2, (canvSize.height + canvSize.width) / 2],
   x: 0,
   y: 0,
   scaleX: 0,
-  scaleY: 0,
   rotation: 0,
 }
 const winLineGroup = ref<{ [key: string]: object }>({
   '': {strokeWidth: 0},
   'draw': {strokeWidth: 0},
-  'top': {x: 0, y: canvSize.height * 1/6},
-  'h-mid': {x: 0, y: canvSize.height * 3/6},
-  'bottom': {x: 0, y: canvSize.height * 5/6},
-  'left': {x: canvSize.width * 1/6, y: 0, rotation: 90},
-  'v-mid': {x: canvSize.width * 3/6, y: 0, rotation: 90},
-  'right': {x: canvSize.width * 5/6, y: 0, rotation: 90},
-  'left-right-diag': {x: 0, y: 0, rotation: 45},
-  'right-left-diag': {x: canvSize.width, y: 0, rotation: 135},
+  'top': {x: 0, y: canvSize.height * 1/6, rotation: -45},
+  'h-mid': {x: 0, y: canvSize.height * 3/6, rotation: -45},
+  'bottom': {x: 0, y: canvSize.height * 5/6, rotation: -45},
+  'left': {x: canvSize.width * 1/6, y: 0, rotation: 45},
+  'v-mid': {x: canvSize.width * 3/6, y: 0, rotation: 45},
+  'right': {x: canvSize.width * 5/6, y: 0, rotation: 45},
+  'left-right-diag': {x: 0, y: 0, points: [0, 0, canvSize.width, canvSize.height]},
+  'right-left-diag': {x: canvSize.width, y: 0, rotation: 90, points: [0, 0, canvSize.height, canvSize.width]},
 })
+// const winLineGroup = ref<{ [key: string]: object }>({
+//   '': {strokeWidth: 0},
+//   'draw': {strokeWidth: 0},
+//   'top': {x: 0, y: canvSize.height * 1/6},
+//   'h-mid': {x: 0, y: canvSize.height * 3/6},
+//   'bottom': {x: 0, y: canvSize.height * 5/6},
+//   'left': {x: canvSize.width * 1/6, y: 0, rotation: 90},
+//   'v-mid': {x: canvSize.width * 3/6, y: 0, rotation: 90},
+//   'right': {x: canvSize.width * 5/6, y: 0, rotation: 90},
+//   'left-right-diag': {x: 0, y: 0, rotation: 45},
+//   'right-left-diag': {x: canvSize.width, y: 0, rotation: 135},
+// })
 const configCatsArc = {
   angle: 0,
   stroke: colors.ui3,
   strokeWidth: 2,
-  x: canvSize.width / 2,
+  x: canvSize.width * 9/16,
   y: canvSize.height / 2,
-  innerRadius: 176,
-  outerRadius: 176,
-  rotation: 90,
+  innerRadius: 200,
+  outerRadius: 200,
+  rotation: -60,
+  clockwise: true
 }
 
 
@@ -197,24 +208,16 @@ if (winLinePos.value != '') {
     gameState.player = gameState.player * -1; // this is to keep the wiining player active
     // msgBox appear animation
     let msgBoxScale = 0;
-    let winLineScale = 0;
     nextTick(() => {
       const msgBoxNode = msgBox.value?.getNode();
-      const winLineNode = winLine.value?.getNode();
       msgBoxNode.scale({ x: 0, y: 0 });
-      winLineNode.scale({ x: 0, y: 0 });
       const msgBoxAnim = new Konva.Animation((f) => {
         msgBoxScale += 3 / 16;
-        winLineScale += 1 / 16;
         if (msgBoxScale >= 1) {
           msgBoxScale = 1;
-        }
-        if (winLineScale >= 1) {
-          winLineScale = 1;
           msgBoxAnim.stop()
         }
         msgBoxNode.scale({ x: msgBoxScale, y: msgBoxScale })
-        winLineNode.scale({ x: winLineScale, y: winLineScale })
       }, msgBoxNode.getLayer());
       msgBoxAnim.start();
     })
@@ -222,16 +225,34 @@ if (winLinePos.value != '') {
     let catsArcAngle = 0;
     nextTick(() => {
       const catsArcNode = catsArc.value?.getNode();
+      catsArcNode.angle(0);
       const catsArcAnim = new Konva.Animation((f) => {
         catsArcAngle -= 15
         if (catsArcAngle <= -180) {
-          catsArcAngle = -180;
+          catsArcAngle = -240;
           catsArcAnim.stop();
         }
         catsArcNode.angle(catsArcAngle);
       }, catsArcNode.getLayer())
       catsArcAnim.start();
     });
+  }
+  else {
+    let winLineScale = 0;
+    nextTick(() => {
+      const winLineNode = winLine.value?.getNode();
+      // winLineNode.scaleX(0);
+      winLineNode.scale({ x:0, y: 0 });
+      const winLineAnim = new Konva.Animation((f) => {
+        winLineScale += 1 / 16;
+        if (winLineScale >= 1) {
+          winLineScale = 1;
+          winLineAnim.stop()
+        }
+        winLineNode.scale({ x: winLineScale, y: winLineScale })
+      }, winLineNode.getLayer());
+      winLineAnim.start();
+    })
   }
     
     setTimeout(() => {
