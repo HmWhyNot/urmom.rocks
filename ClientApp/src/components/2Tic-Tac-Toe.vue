@@ -10,6 +10,7 @@
               <v-layer id="layer" ref="layer">
                 <v-line v-for="line in frameGroup" :config="{ ...configFrame, points: line }" />
                 <v-line ref="winLine" :config="{ ...configWinLine, ...winLineGroup[winLinePos] }"/>
+                <v-arc ref="catsArc" :config="{ ...configCatsArc }"/>
                 <v-group v-for="(square, i) in squareGroup" :key="'square' + i" :config="{ ...configSquare, ...square }" @click="squareClick(i)">
                   <v-circle v-if="gameState.field[i] < 0" :config="configNaught" />
                   <v-line v-if="gameState.field[i] > 0" :config="configCross" />
@@ -58,6 +59,7 @@ const layer = ref<Konva.Layer>();
 const stage = ref<Konva.Stage>();
 const msgBox = ref<Konva.Group>();
 const winLine = ref<Konva.Line>();
+const catsArc = ref<Konva.Arc>();
 
 // sizing constants
 const canvSize = { width: 600, height: 600 };
@@ -168,6 +170,16 @@ const winLineGroup = ref<{ [key: string]: object }>({
   'left-right-diag': {x: 0, y: 0, rotation: 45},
   'right-left-diag': {x: canvSize.width, y: 0, rotation: 135},
 })
+const configCatsArc = {
+  angle: 0,
+  stroke: colors.ui3,
+  strokeWidth: 2,
+  x: canvSize.width / 2,
+  y: canvSize.height / 2,
+  innerRadius: 176,
+  outerRadius: 176,
+  rotation: 90,
+}
 
 
 function squareClick(i: number) {
@@ -181,7 +193,7 @@ function squareClick(i: number) {
   winLinePos.value = checkWin(gameState.field);
 
   // clear field if full or win
-  if (winLinePos.value != '') {
+if (winLinePos.value != '') {
     gameState.player = gameState.player * -1; // this is to keep the wiining player active
     // msgBox appear animation
     let msgBoxScale = 0;
@@ -191,7 +203,7 @@ function squareClick(i: number) {
       const winLineNode = winLine.value?.getNode();
       msgBoxNode.scale({ x: 0, y: 0 });
       winLineNode.scale({ x: 0, y: 0 });
-      const anim = new Konva.Animation((f) => {
+      const msgBoxAnim = new Konva.Animation((f) => {
         msgBoxScale += 3 / 16;
         winLineScale += 1 / 16;
         if (msgBoxScale >= 1) {
@@ -199,13 +211,28 @@ function squareClick(i: number) {
         }
         if (winLineScale >= 1) {
           winLineScale = 1;
-          anim.stop()
+          msgBoxAnim.stop()
         }
         msgBoxNode.scale({ x: msgBoxScale, y: msgBoxScale })
         winLineNode.scale({ x: winLineScale, y: winLineScale })
       }, msgBoxNode.getLayer());
-      anim.start();
+      msgBoxAnim.start();
     })
+  if (winLinePos.value == 'draw') {
+    let catsArcAngle = 0;
+    nextTick(() => {
+      const catsArcNode = catsArc.value?.getNode();
+      const catsArcAnim = new Konva.Animation((f) => {
+        catsArcAngle -= 15
+        if (catsArcAngle <= -180) {
+          catsArcAngle = -180;
+          catsArcAnim.stop();
+        }
+        catsArcNode.angle(catsArcAngle);
+      }, catsArcNode.getLayer())
+      catsArcAnim.start();
+    });
+  }
     
     setTimeout(() => {
       gameState.field.fill(0);
