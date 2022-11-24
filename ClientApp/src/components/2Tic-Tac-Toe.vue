@@ -65,9 +65,7 @@ const catsArc = ref();
 const canvSize = { width: 600, height: 600 };
 const sqSize = { width: canvSize.width / 3, height: canvSize.height / 3 };
 
-////////////////
-// game logic //
-////////////////
+// global game constants
 
 const gameState: {[key: string]: any} = store.ticTacToe
 const winLinePos = ref<'top' | 'h-mid' | 'bottom' |
@@ -182,6 +180,7 @@ const configCatsArc = {
   clockwise: true
 }
 
+// Game logic
 
 function squareClick(i: number) {
   // Place mark (X/O) for current player
