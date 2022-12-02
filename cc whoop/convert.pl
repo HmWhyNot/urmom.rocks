@@ -98,7 +98,23 @@ while (<$in>) {
 
     # sets tabs for line
     # s/^ */$tabs/;
-    s/^ *//;
+    # s/^ *//;
+
+
+    if (/}/g) {
+      if ((@blockSkip > 0) && ($blockSkip[$#blockSkip] == $tabcount - 1)) {
+        pop(@blockSkip);
+        $paramCond = '';
+        # $skip = 1;
+        $skip = 2;
+      }
+    }
+
+    # line skipping
+    if ($skip > 0) {
+      $skip -= 1;
+      next;
+    }
 
     #############
     # main code #
@@ -267,38 +283,19 @@ sub Replacements {
 }
 
 sub Tabs {
-  $tabs = ' ' x ($tabsize * $tabcount);
 
-  # increases tab for start of blocks
-  if (/{/g) {
+  tabcount = 0;
+  my $tabskip = @blockSkip;
+
+  while (/^ /) {
     $tabcount += 1;
+    s/^ /^/;
   }
-  # decreases tabs for end of blocks
-  if (/}/g) {
-    # if ($tabcount == $End) {
-    #   $Start = 0;
-    #   $End = 0;
-    #   $usingCount = 0;
-    #   $skip = 0;
-    # }
-    if ((@blockSkip > 0) && ($blockSkip[$#blockSkip] == $tabcount - 1)) {
-      pop(@blockSkip);
-      $paramCond = '';
-      $skip = 1;
-      # $skip = 2;
-    }
-    else {
-      $tabcount -= 1;
-    }
-    $tabs = ' ' x ($tabsize * $tabcount);
-    if ($tabcount == $End) {
-      $Start = 0;
-      $End = 0;
-      $usingCount = 0;
-      $skip = 0;
-    }
-  }
-  s/^ */$tabs/;
+  $tabcount /= $tabsize;
+  $tabcount -= $tabskip;
+
+  my $tab = ' ' x ($tabsize * $count);
+  s/^/$tab/;
 }
 
 
