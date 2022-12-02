@@ -1,0 +1,96 @@
+        public static FrameworkResponse CreateCoworkerContact(string CoworkerID, long TypeID, string Label, string Value, string CreatedBy)
+        {
+            try
+            {
+                using (SqlConnection Connection = SQL.GenerateConnection("PrimaryDB"))
+                {
+                    using (SqlCommand Command = SQL.GenerateCommand(Connection, "sp_ccCAHC_Create_After_Hours_Contact_Contact"))
+                    {
+                        Command.Parameters.AddWithValue("@CoworkerID", CoworkerID);
+                        Command.Parameters.AddWithValue("@TypeID", TypeID);
+                        Command.Parameters.AddWithValue("@Label", Label);
+                        Command.Parameters.AddWithValue("@Value", Value);
+                        Command.Parameters.AddWithValue("@CurrentUser", CreatedBy);
+                        var IDScalar = Command.ExecuteScalar();
+                        if (IDScalar != null && IDScalar != DBNull.Value)
+                        {
+                            if (long.TryParse(IDScalar.ToString(), out long ID))
+                            {
+                                return new FrameworkCreationResponse
+                                {
+                                    Success = true,
+                                    Message = "Successfully created coworker contact.",
+                                    Item = GetSingleCoworkerContact(ID).LookupThen((success, response, result) => success && result != null ? result?.To<CoworkerContact>() : null)
+                                };
+                            }
+                            return new FrameworkResponse
+                            {
+                                Success = false,
+                                Message = "Unable to create coworker contact."
+                            };
+                        }
+                        return new FrameworkResponse
+                        {
+                            Success = false,
+                            Message = "Unable to create coworker contact."
+                        };
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                return new FrameworkResponse(e);
+            }
+        }
+
+        public static FrameworkResponse GetSingleCoworkerContact(long ID)
+        {
+            try
+            {
+                using (SqlConnection Connection = SQL.GenerateConnection("PrimaryDB"))
+                {
+                    using (SqlCommand Command = SQL.GenerateCommand(Connection, "sp_ccCAHC_Get_Single_After_Hours_Contact_Contact"))
+                    {
+                        Command.Parameters.AddWithValue("@ID", ID);
+                        using (SqlDataReader DataReader = Command.ExecuteReader())
+                        {
+                            if (DataReader.HasRows)
+                            {
+                                while (DataReader.Read())
+                                {
+                                    return new FrameworkLookupResponse
+                                    {
+                                        Success = true,
+                                        Message = "Successfully retrieved coworker contact.",
+                                        Result = new CoworkerContact
+                                        {
+                                            ID = Convert.ToInt64(DataReader.GetValue(DataReader.GetOrdinal("ID"))),
+                                            Type = CoworkerContactType.GetSingleCoworkerContactType(Convert.ToInt64(DataReader.GetValue(DataReader.GetOrdinal("Type_ID")))).LookupThen((success, response, result) => success && result != null ? result?.To<CoworkerContactType>() : null),
+                                            Label = DataReader.GetValue(DataReader.GetOrdinal("Label")).ToString(),
+                                            Value = DataReader.GetValue(DataReader.GetOrdinal("Value")).ToString(),
+                                            CreatedBy = Coworker.GetSingleCoworker(DataReader.GetValue(DataReader.GetOrdinal("Created_By")).ToString(), 0).LookupThen((success, response, result) => success && result != null ? result?.To<Coworker>() : null),
+                                            CreatedDate = Convert.ToDateTime(DataReader.GetValue(DataReader.GetOrdinal("Created_Date")))
+                                        }
+                                    };
+                                }
+                                return new FrameworkResponse
+                                {
+                                    Success = false,
+                                    Message = "Unable to read coworker contact from database."
+                                };
+                            }
+                            return new FrameworkLookupResponse
+                            {
+                                Success = true,
+                                Message = "Coworker contact not found.",
+                                Result = null
+                            };
+                        }
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                return new FrameworkResponse(e);
+            }
+        }
