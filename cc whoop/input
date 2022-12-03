@@ -1,3 +1,32 @@
+        public static FrameworkResponse UpdateCoworkerContact(long ID, long TypeID, string Label, string Value, string CreatedBy)
+        {
+            try
+            {
+                using (SqlConnection Connection = SQL.GenerateConnection("PrimaryDB"))
+                {
+                    using (SqlCommand Command = SQL.GenerateCommand(Connection, "sp_ccCAHC_Update_After_Hours_Contact_Contact"))
+                    {
+                        Command.Parameters.AddWithValue("@ID", ID);
+                        Command.Parameters.AddWithValue("@TypeID", TypeID);
+                        Command.Parameters.AddWithValue("@Label", Label);
+                        Command.Parameters.AddWithValue("@Value", Value);
+                        Command.Parameters.AddWithValue("@CurrentUser", CreatedBy);
+                        Command.ExecuteNonQuery();
+                    }
+                }
+                return new FrameworkCreationResponse
+                {
+                    Success = true,
+                    Message = "Successfully updated coworker contact.",
+                    Item = GetSingleCoworkerContact(ID).LookupThen((success, response, result) => success && result != null ? result?.To<CoworkerContact>() : null)
+                };
+            }
+            catch(Exception e)
+            {
+                return new FrameworkResponse(e);
+            }
+        }
+
         public static FrameworkResponse CreateCoworkerContact(string CoworkerID, long TypeID, string Label, string Value, string CreatedBy)
         {
             try
@@ -88,6 +117,430 @@
                         }
                     }
                 }
+            }
+            catch(Exception e)
+            {
+                return new FrameworkResponse(e);
+            }
+        }
+
+        public static FrameworkResponse GetQueueItemsForLocation(long LocationID, bool Unprocessed = false, bool? SwitchManageable = null)
+        {
+            try
+            {
+                using (SqlConnection Connection = SQL.GenerateConnection("PrimaryDB"))
+                {
+                    using (SqlCommand Command = SQL.GenerateCommand(Connection, "sp_ccVPN_Get_VLAN_Change_Requests_By_Location"))
+                    {
+                        Command.Parameters.AddWithValue("@LocationID", LocationID);
+                        if (Unprocessed)
+                        {
+                            Command.Parameters.AddWithValue("@LimitHours", DBNull.Value);
+                            Command.Parameters.AddWithValue("@Unprocessed", Unprocessed);
+                        }
+                        Command.Parameters.AddWithValue("@SwitchManageable", SwitchManageable.DBNullBool());
+                        using (SqlDataReader DataReader = Command.ExecuteReader())
+                        {
+                            if (DataReader.HasRows)
+                            {
+                                List<Queue> Output = new List<Queue>();
+                                while (DataReader.Read())
+                                {
+                                    Output.Add(new Queue
+                                    {
+                                        ID = Convert.ToInt64(DataReader.GetValue(DataReader.GetOrdinal("QueueID"))),
+                                        RequestedBy = new Coworker
+                                        {
+                                            CoworkerID = DataReader.GetValue(DataReader.GetOrdinal("QueueRequestedBy")).ToString().Trim().ToUpper(),
+                                            FirstName = DataReader.GetValue(DataReader.GetOrdinal("QueueRequestedByFirstName")).ToString().FormatName(),
+                                            LastName = DataReader.GetValue(DataReader.GetOrdinal("QueueRequestedByLastName")).ToString().FormatName()
+                                        },
+                                        RequestedDate = Convert.ToDateTime(DataReader.GetValue(DataReader.GetOrdinal("QueueRequestedDate"))),
+                                        RequestedWorkstation = new NetworkInformation
+                                        {
+                                            IPAddress = DataReader.GetValue(DataReader.GetOrdinal("QueueRequestedIP")).ToString()
+                                        },
+                                        TargetSwitch = new Switch
+                                        {
+                                            ID = Convert.ToInt64(DataReader.GetValue(DataReader.GetOrdinal("QueueTargetSwitchID"))),
+                                            Name = DataReader.GetValue(DataReader.GetOrdinal("QueueTargetSwitchName")).ToString(),
+                                            Manageable = Convert.ToBoolean(DataReader.GetValue(DataReader.GetOrdinal("QueueTargetSwitchManageable")))
+                                        },
+                                        TargetBench = new Bench
+                                        {
+                                            ID = Convert.ToInt64(DataReader.GetValue(DataReader.GetOrdinal("QueueTargetBenchID"))),
+                                            Name = DataReader.GetValue(DataReader.GetOrdinal("QueueTargetBenchName")).ToString(),
+                                            InterfaceName = DataReader.GetValue(DataReader.GetOrdinal("QueueTargetBenchPortName")).ToString(),
+                                        },
+                                        TargetVLAN = new VLAN
+                                        {
+                                            ID = Convert.ToInt64(DataReader.GetValue(DataReader.GetOrdinal("QueueTargetVLANID"))),
+                                            Tag = DataReader.GetValue(DataReader.GetOrdinal("QueueTargetVLANTag")).ToString(),
+                                            Customer = new CDW.Customer
+                                            {
+                                                ID = DataReader.GetValue(DataReader.GetOrdinal("QueueTargetVLANCustomerID")).ToString(),
+                                                Name = DataReader.GetValue(DataReader.GetOrdinal("QueueTargetVLANCustomerName")).ToString()
+                                            }
+                                        },
+                                        Status = (Statuses)Enum.Parse(typeof(Statuses), DataReader.GetValue(DataReader.GetOrdinal("QueueStatusID")).ToString()),
+                                        Resetable = Convert.ToBoolean(DataReader.GetValue(DataReader.GetOrdinal("QueueResetable"))),
+                                        TTL = DataReader.GetValue(DataReader.GetOrdinal("QueueTimeToLive")) == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(DataReader.GetValue(DataReader.GetOrdinal("QueueTimeToLive"))),
+                                        AgentStartTime = DataReader.GetValue(DataReader.GetOrdinal("QueueAgentStartTime")) == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(DataReader.GetValue(DataReader.GetOrdinal("QueueAgentStartTime"))),
+                                        AgentCompletedTime = DataReader.GetValue(DataReader.GetOrdinal("QueueAgentCompletedTime")) == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(DataReader.GetValue(DataReader.GetOrdinal("QueueAgentCompletedTime")))
+                                    });
+                                }
+                                return new FrameworkSearchResponse
+                                {
+                                    Success = true,
+                                    Message = "Successfully retrieved queue items.",
+                                    TotalResults = Output.Count,
+                                    Results = Output
+                                };
+                            }
+                            return new FrameworkSearchResponse
+                            {
+                                Success = true,
+                                Message = "No queue items found.",
+                                TotalResults = 0,
+                                Results = new List<Queue>()
+                            };
+                        }
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                return new FrameworkResponse(e);
+            }
+        }
+
+        public static FrameworkResponse SearchAllPicks(int? Limit, int? Offset, string Search = null, string Sort = null, string Order = null)
+        {
+            try
+            {
+                var Results = SQL.GetResults("PrimaryDB", "sp_ccORD_Search_All_Picks", new SqlParameter[]
+                {
+                    new SqlParameter("@Limit", Limit.DBNullInt()),
+                    new SqlParameter("@Offset", Offset.DBNullInt()),
+                    new SqlParameter("@Search", Search.DBNullString()),
+                    new SqlParameter("@Sort", Sort.DBNullString()),
+                    new SqlParameter("@Order", Order.DBNullString())
+                });
+                if (Results != null && Results.Count > 0)
+                {
+                    return new FrameworkSearchResponse
+                    {
+                        Success = true,
+                        Message = "Successfully retrieved picks.",
+                        TotalResults = Results[0].GetValue("TotalResults").ToInt(),
+                        Results = Results.Select(r => new Pick
+                        {
+                            SalesOrder = r.GetValue("Sales_Order").ToNullableString(),
+                            LogisticsOrder = r.GetValue("Logistics_Order").ToNullableString(),
+                            OrderNumber = r.GetValue("Order_Number").ToNullableString(),
+                            PickNote = r.GetValue("Pick_Note").ToNullableResult(r, (pick) => { return pick.GetValue("Pick_Note").ToInt(); }),
+                            Customer = r.GetValue("Customer_Number").ToNullableResult(r, (pick) =>
+                            {
+                                return new Customer
+                                {
+                                    ID = pick.GetValue("Customer_Number").ToString(),
+                                    Name = pick.GetValue("Customer_Name").ToNullableString(),
+                                    PrimarySalesRep = r.GetValue("Sales_Rep").ToNullableResult(pick, (salesrep) =>
+                                    {
+                                        return new Coworker
+                                        {
+                                            CoworkerID = salesrep.GetValue("Sales_Rep_EmpID").ToNullableString()?.Trim().ToUpper(),
+                                            FirstName = salesrep.GetValue("Sales_Rep_FirstName").ToNullableString()?.FormatName(),
+                                            LastName = salesrep.GetValue("Sales_Rep_LastName").ToNullableString()?.FormatName()
+                                        };
+                                    }),
+                                    SecondarySalesRep = r.GetValue("Sales_Rep_2").ToNullableResult(pick, (salesrep) =>
+                                    {
+                                        return new Coworker
+                                        {
+                                            CoworkerID = salesrep.GetValue("Sales_Rep_2_EmpID").ToNullableString()?.Trim().ToUpper(),
+                                            FirstName = salesrep.GetValue("Sales_Rep_2_FirstName").ToNullableString()?.FormatName(),
+                                            LastName = salesrep.GetValue("Sales_Rep_2_LastName").ToNullableString()?.FormatName()
+                                        };
+                                    })
+                                };
+                            }),
+                            OrderPriority = r.GetValue("Order_Priority").ToNullableInt(),
+                            BuildTime = r.GetValue("Order_Build_Time").ToNullableResult(r, (pick) =>
+                            {
+                                return TimeSpan.FromHours(pick.GetValue("Order_Build_Time").ToDouble());
+                            }),
+                            Complexity = r.GetValue("Complexity").ToNullableResult(r, (pick) =>
+                            {
+                                return new BuildComplexity
+                                {
+                                    ID = pick.GetValue("Complexity").ToLong()()
+                                };
+                            }),
+                            BuildType = new ProductType
+                            {
+                                Code = r.GetValue("Pick_Group_Build_Type").ToNullableString() ?? "0",
+                                Description = r.GetValue("Pick_Group_Build_Type_Description").ToNullableString() ?? "Other"
+                            },
+                            Area = r.GetValue("Area").ToNullableResult(r, (pick) =>
+                            {
+                                return new Area
+                                {
+                                    Name = pick.GetValue("Area").ToString(),
+                                    Title = pick.GetValue("Area_Title").ToString()
+                                };
+                            }),
+                            AssignedTo = r.GetValue("Assigned_To").ToNullableResult(r, (pick) =>
+                            {
+                                return new Coworker
+                                {
+                                    CoworkerID = pick.GetValue("Assigned_To").ToNullableString()?.Trim().ToUpper(),
+                                    FirstName = pick.GetValue("Assigned_To_FirstName").ToNullableString()?.FormatName(),
+                                    LastName = pick.GetValue("Assigned_To_LastName").ToNullableString()?.FormatName()
+                                };
+                            }),
+                            AssignedBy = r.GetValue("Assigned_By").ToNullableResult(r, (pick) =>
+                            {
+                                return new Coworker
+                                {
+                                    CoworkerID = pick.GetValue("Assigned_By").ToNullableString()?.Trim().ToUpper(),
+                                    FirstName = pick.GetValue("Assigned_By_FirstName").ToNullableString()?.FormatName(),
+                                    LastName = pick.GetValue("Assigned_By_LastName").ToNullableString()?.FormatName()
+                                };
+                            }),
+                            AssignedDate = r.GetValue("Assigned_Date").ToNullableResult(r, (pick) =>
+                            {
+                                if (r.GetValue("Assigned_Time").ToNullableInt() == null) { return (DateTime?)null; }
+                                return r.GetValue("Assigned_Date").ToInt().ConvertAS400DateTimeToDateTime(r.GetValue("Assigned_Time").ToInt());
+                            }),
+                            AreaAssignedTo = r.GetValue("Last_Area_Scan_Assigned_To").ToNullableResult(r, (pick) =>
+                            {
+                                return new Coworker
+                                {
+                                    CoworkerID = pick.GetValue("Last_Area_Scan_Assigned_To").ToNullableString()?.Trim().ToUpper(),
+                                    FirstName = pick.GetValue("Last_Area_Scan_Assigned_To_FirstName").ToNullableString()?.FormatName(),
+                                    LastName = pick.GetValue("Last_Area_Scan_Assigned_To_LastName").ToNullableString()?.FormatName()
+                                };
+                            }),
+                            AreaAssignedBy = r.GetValue("Last_Area_Scan_Assigned_By").ToNullableResult(r, (pick) =>
+                            {
+                                return new Coworker
+                                {
+                                    CoworkerID = pick.GetValue("Last_Area_Scan_Assigned_By").ToNullableString()?.Trim().ToUpper(),
+                                    FirstName = pick.GetValue("Last_Area_Scan_Assigned_By_FirstName").ToNullableString()?.FormatName(),
+                                    LastName = pick.GetValue("Last_Area_Scan_Assigned_By_LastName").ToNullableString()?.FormatName()
+                                };
+                            }),
+                            AreaAssignedDate = r.GetValue("Last_Area_Scan_Assigned_Date").ToNullableResult(r, (pick) =>
+                            {
+                                if (r.GetValue("Last_Area_Scan_Assigned_Time").ToNullableInt() == null) { return (DateTime?)null; }
+                                return r.GetValue("Last_Area_Scan_Assigned_Date").ToInt().ConvertAS400DateTimeToDateTime(r.GetValue("Last_Area_Scan_Assigned_Time").ToInt());
+                            }),
+                            Step = r.GetValue("Step").ToNullableResult(r, (pick) =>
+                            {
+                                switch (r.GetValue("Step").ToString())
+                                {
+                                    case "Router":
+                                        return Progress.Router;
+                                    case "Picking":
+                                        return Progress.Picking;
+                                    case "Staging":
+                                        return Progress.Staging;
+                                    case "WIP":
+                                        return Progress.WIP;
+                                    case "Completed":
+                                        return Progress.Completed;
+                                    case "Cancelled":
+                                        return Progress.Cancelled;
+                                    default:
+                                        return Progress.Unknown;
+                                }
+                            }),
+                            LastScan = r.GetValue("Last_Scan_Code").ToNullableResult(r, (pick) =>
+                            {
+                                return new OrderAction
+                                {
+                                    Code = pick.GetValue("Last_Scan_Code").ToString(),
+                                    Description = pick.GetValue("Last_Scan_Description").ToString(),
+                                    Date = pick.GetValue("Last_Scan_Date").ToNullableResult(r, (date) =>
+                                    {
+                                        if (pick.GetValue("Last_Scan_Time").ToNullableInt() == null) { return (DateTime?)null; }
+                                        return pick.GetValue("Last_Scan_Date").ToInt().ConvertAS400DateTimeToDateTime(pick.GetValue("Last_Scan_Time").ToInt());
+                                    })
+                                };
+                            }),
+                            Priority = r.GetValue("Priority").ToNullableBool() ?? false,
+                            AssetTagCount = r.GetValue("Asset_Tag_Count").ToNullableInt(),
+                            CustomBrandingCount = r.GetValue("Laser_Etching_Count").ToNullableInt(),
+                            PrinterCount = r.GetValue("Printer_Count").ToNullableInt(),
+                            ImagingCount = r.GetValue("Image_Count").ToNullableInt(),
+                            WGSCount = r.GetValue("Chrome_Count").ToNullableInt(),
+                            VPNorSCCMCount = r.GetValue("VPN_or_SCCM_Count").ToNullableInt(),
+                            IsOnHold = r.GetValue("On_Hold").ToNullableBool() ?? false,
+                            FlaggedInRouter = r.GetValue("Flagged_In_Router").ToNullableBool() ?? false,
+                            IsCancelled = r.GetValue("Pick_Cancelled").ToNullableBool() ?? false,
+                            IsFlex = r.GetValue("Flex_Pick").ToNullableBool() ?? false,
+                            IsBuyAndHold = r.GetValue("Buy_and_Hold").ToNullableBool() ?? false,
+                            IsPriority = r.GetValue("Priority").ToNullableBool() ?? false,
+                            TotalBuilds = r.GetValue("Total_Builds").ToNullableInt(),
+                            ServiceRevenue = r.GetValue("Service_Revenue").ToNullableDouble(),
+                            NonServiceRevenue = r.GetValue("Non_Service_Revenue").ToNullableDouble(),
+                            IsPhoneActivation = r.GetValue("Phone_Activation").ToNullableBool() ?? false,
+                            RouterDate = r.GetValue("Router_Date").ToNullableResult(r, (pick) =>
+                            {
+                                if (r.GetValue("Router_Time").ToNullableInt() == null) { return (DateTime?)null; }
+                                return r.GetValue("Router_Date").ToInt().ConvertAS400DateTimeToDateTime(r.GetValue("Router_Time").ToInt());
+                            }),
+                            PickPrintDate = r.GetValue("Pick_Print_Date").ToNullableResult(r, (pick) =>
+                            {
+                                if (r.GetValue("Pick_Print_Time").ToNullableInt() == null) { return (DateTime?)null; }
+                                return r.GetValue("Pick_Print_Date").ToInt().ConvertAS400DateTimeToDateTime(r.GetValue("Pick_Print_Time").ToInt());
+                            }),
+                            ScannedInDate = r.GetValue("Scanned_In_Date").ToNullableResult(r, (pick) =>
+                            {
+                                if (r.GetValue("Scanned_In_Time").ToNullableInt() == null) { return (DateTime?)null; }
+                                return r.GetValue("Scanned_In_Date").ToInt().ConvertAS400DateTimeToDateTime(r.GetValue("Scanned_In_Time").ToInt());
+                            }),
+                            FinalQCDate = r.GetValue("Final_QC_Date").ToNullableResult(r, (pick) =>
+                            {
+                                if (r.GetValue("Final_QC_Time").ToNullableInt() == null) { return (DateTime?)null; }
+                                return r.GetValue("Final_QC_Date").ToInt().ConvertAS400DateTimeToDateTime(r.GetValue("Final_QC_Time").ToInt());
+                            }),
+                            PickCancelDate = r.GetValue("Pick_Cancel_Date").ToNullableResult(r, (pick) =>
+                            {
+                                if (r.GetValue("Pick_Cancel_Time").ToNullableInt() == null) { return (DateTime?)null; }
+                                return r.GetValue("Pick_Cancel_Date").ToInt().ConvertAS400DateTimeToDateTime(r.GetValue("Pick_Cancel_Time").ToInt());
+                            }),
+                            InvoicedDate = r.GetValue("Pick_Invoice_Date").ToNullableInt()?.ConvertAS400DateToDateTime(),
+                            Invoiced = r.GetValue("Pick_Invoiced").ToNullableBool() ?? false,
+                            Location = r.GetValue("DC").ToNullableResult(r, (pick) =>
+                            {
+                                return new Location
+                                {
+                                    ID = pick.GetValue("DC").ToLong()(),
+                                    Name = pick.GetValue("DC_Name").ToNullableString(),
+                                    Description = pick.GetValue("DC_Description").ToNullableString()
+                                };
+                            }),
+                            CurrentFlag = r.GetValue("Flags_Current").ToNullableResult(r, (pick) =>
+                            {
+                                return new OrderAction
+                                {
+                                    Code = pick.GetValue("Flags_Current").ToString(),
+                                    Description = pick.GetValue("Flags_Current_Description").ToString(),
+                                    Date = pick.GetValue("Flags_Current_Date").ToNullableResult(pick, (date) =>
+                                    {
+                                        if (pick.GetValue("Flags_Current_Time").ToNullableInt() == null) { return (DateTime?)null; }
+                                        return pick.GetValue("Flags_Current_Date").ToInt().ConvertAS400DateTimeToDateTime(pick.GetValue("Flags_Current_Time").ToInt());
+                                    })
+                                };
+                            }),
+                            CurrentHoldScan = r.GetValue("Holds_Current").ToNullableResult(r, (pick) =>
+                            {
+                                return new OrderAction
+                                {
+                                    Code = pick.GetValue("Holds_Current").ToString(),
+                                    Description = pick.GetValue("Holds_Current_Description").ToString(),
+                                    Date = pick.GetValue("Holds_Current_Date").ToNullableResult(pick, (date) =>
+                                    {
+                                        if (pick.GetValue("Holds_Current_Time").ToNullableInt() == null) { return (DateTime?)null; }
+                                        return pick.GetValue("Holds_Current_Date").ToInt().ConvertAS400DateTimeToDateTime(pick.GetValue("Holds_Current_Time").ToInt());
+                                    })
+                                };
+                            }),
+                            ProjectRolloutHold = r.GetValue("Holds_IsProject").ToNullableBool() ?? false,
+                            OrderEntryDate = r.GetValue("Order_Entry_Date").ToNullableResult(r, (pick) =>
+                            {
+                                if (r.GetValue("Order_Entry_Time") == null) { return (DateTime?)null; }
+                                return r.GetValue("Order_Entry_Date").ToInt().ConvertAS400DateTimeToDateTime(r.GetValue("Order_Entry_Time").ToInt());
+                            }),
+                            PartialDelivery = r.GetValue("Order_Partial_Delivery").ToNullableBool() ?? false,
+                            DeliveryRequiredDate = r.GetValue("Order_Delivery_Required_Date").ToNullableInt()?.ConvertAS400DateToDateTime(),
+                            PickMarkedForRelease = r.GetValue("Pick_Released").ToNullableBool() ?? false,
+                            PickReleaseBatch = r.GetValue("Pick_Release_Batch").ToNullableInt(),
+                            PickReleaseDate = r.GetValue("Pick_Release_Date").ToNullableDateTime(),
+                            PickReleaseMarkedBy = r.GetValue("Pick_Release_By").ToNullableResult(r, (pick) =>
+                            {
+                                return new Coworker
+                                {
+                                    CoworkerID = pick.GetValue("Pick_Release_By").ToString().Trim().ToUpper(),
+                                    FirstName = pick.GetValue("Pick_Release_By_FirstName").ToString().FormatName(),
+                                    LastName = pick.GetValue("Pick_Release_By_LastName").ToString().FormatName()
+                                };
+                            }),
+                            PickReleaseMarkedDate = r.GetValue("Pick_Release_On").ToNullableDateTime(),
+                            PickVerified = r.GetValue("Pick_Verified").ToNullableBool() ?? false,
+                            PickVerifiedBy = r.GetValue("Pick_Verification_By").ToNullableResult(r, (pick) =>
+                            {
+                                return new Coworker
+                                {
+                                    CoworkerID = pick.GetValue("Pick_Verification_By").ToString().Trim().ToUpper(),
+                                    FirstName = pick.GetValue("Pick_Verification_By_FirstName").ToString().FormatName(),
+                                    LastName = pick.GetValue("Pick_Verification_By_LastName").ToString().FormatName()
+                                };
+                            }),
+                            PickVerifiedDate = r.GetValue("Pick_Verification_Date").ToNullableDateTime(),
+                            PickVerificationNote = r.GetValue("Pick_Verification_Note").ToNullableString(),
+                            ShippingMethod = r.GetValue("Ship_Method").ToNullableResult(r, (pick) =>
+                            {
+                                return new ShipMethod
+                                {
+                                    Code = pick.GetValue("Ship_Method").ToString(),
+                                    Description = pick.GetValue("Ship_Method_Description").ToString()
+                                };
+                            }),
+                            SLAOriginalDate = r.GetValue("SLA_Date").ToNullableDateTime(),
+                            SLAOverrideDate = r.GetValue("SLA_Override_Date").ToNullableDateTime(),
+                            SLAOverrideBy = r.GetValue("SLA_Override_By").ToNullableResult(r, (pick) =>
+                            {
+                                return new Coworker
+                                {
+                                    CoworkerID = pick.GetValue("SLA_Override_By").ToNullableString()?.Trim().ToUpper(),
+                                    FirstName = pick.GetValue("SLA_Override_By_FirstName").ToNullableString()?.FormatName(),
+                                    LastName = pick.GetValue("SLA_Override_By_LastName").ToNullableString()?.FormatName()
+                                };
+                            }),
+                            SLAOverrideOn = r.GetValue("SLA_Override_On").ToNullableDateTime(),
+                            SLADays = r.GetValue("SLA_Days").ToNullableInt(),
+                            EstimatedDueDateOriginalDate = r.GetValue("Estimated_Due_Date").ToNullableDateTime(),
+                            EstimatedDueDateOverrideDate = r.GetValue("Estimated_Due_Date_Override_Date").ToNullableDateTime(),
+                            EstimatedDueDateOverrideBy = r.GetValue("Estimated_Due_Date_Override_By").ToNullableResult(r, (pick) =>
+                            {
+                                return new Coworker
+                                {
+                                    CoworkerID = pick.GetValue("Estimated_Due_Date_Override_By").ToNullableString()?.Trim().ToUpper(),
+                                    FirstName = pick.GetValue("Estimated_Due_Date_Override_By_FirstName").ToNullableString()?.FormatName(),
+                                    LastName = pick.GetValue("Estimated_Due_Date_Override_By_LastName").ToNullableString()?.FormatName()
+                                };
+                            }),
+                            EstimatedDueDateOverrideOn = r.GetValue("Estimated_Due_Date_Override_On").ToNullableDateTime(),
+                            TrueAging = r.GetValue("True_Aging").ToNullableInt(),
+                            TotalFlaggedDays = r.GetValue("Flags_Days").ToNullableInt(),
+                            TotalHoldDays = r.GetValue("Holds_Days").ToNullableInt(),
+                            StartDate = r.GetValue("Start_Date").ToNullableDateTime(),
+                            StartDateSetBy = r.GetValue("Start_Date_By").ToNullableResult(r, (pick) =>
+                            {
+                                return new Coworker
+                                {
+                                    CoworkerID = pick.GetValue("Start_Date_By").ToNullableString()?.Trim().ToUpper(),
+                                    FirstName = pick.GetValue("Start_Date_By_FirstName").ToNullableString()?.FormatName(),
+                                    LastName = pick.GetValue("Start_Date_By_LastName").ToNullableString()?.FormatName()
+                                };
+                            }),
+                            StartDateSetOn = r.GetValue("Start_Date_On").ToNullableDateTime(),
+                            TotalServices = r.GetValue("Total_Services_Count").ToNullableInt(),
+                            TotalManagedServices = r.GetValue("Total_Managed_Services_Count").ToNullableInt(),
+                            SpecialOpsCount = r.GetValue("Spec_Ops").ToNullableInt()
+                        }).ToList()
+                    };
+                }
+                return new FrameworkSearchResponse
+                {
+                    Success = true,
+                    Message = "No picks found.",
+                    TotalResults = 0,
+                    Results = new List<Pick>()
+                };
             }
             catch(Exception e)
             {

@@ -20,7 +20,6 @@ else {
 
 my $tabsize = 4;
 my $tabcount = 0;
-my $tabskip = 0;
 my $tabs = '';
 my $Results = 0;
 my $SQLConnection = '';
@@ -29,92 +28,34 @@ my @SQLParameters = ();
 my $paramCond = '';
 my $CRUDCommand = '';
 my $resultVar = '';
-my $usingCount = 0;
 my $skip = 0;
 my @blockSkip = ();
 my $Start = 0;
-my $End = 0;
 while (<$in>) {
 
   # Starts the process for object when try is hit
-  if (/try/) {
-    $tabcount = 0;
-    $tabskip = 0;
-    # while (/^ /) {
-    #   $tabcount += 1;
-    #   s/ //;
-    # }
-    $tabcount /= $tabsize;
-    $End = $tabcount - 1;
+  if (/^ *try/) {
     $Start = 1;
   }
+  if (/^ *catch/) {
+    Clear();
+    $Start = 0;
+  }
+  Tabs();
 
   ###########################
   # Start of Object Process #
   ###########################
   if ($Start) {
-    Tabs();
-    # $tabs = ' ' x ($tabsize * $tabcount);
+    # # Tabs();
 
-    # # increases tab for start of blocks
-    # if (/{/g) {
-    #   $tabcount += 1;
-    # }
-    # # decreases tabs for end of blocks
-    # if (/}/g) {
-    #   # if ($tabcount == $End) {
-    #   #   $Start = 0;
-    #   #   $End = 0;
-    #   #   $usingCount = 0;
-    #   #   $skip = 0;
-    #   # }
-    #   if ((@blockSkip > 0) && ($blockSkip[$#blockSkip] == $tabcount - 1)) {
-    #     pop(@blockSkip);
-    #     $paramCond = '';
-    #     # $skip = 1;
-    #     $skip = 2;
-    #   }
-    #   else {
-    #     $tabcount -= 1;
-    #   }
-    #   $tabs = ' ' x ($tabsize * $tabcount);
-    #   if ($tabcount == $End) {
-    #     $Start = 0;
-    #     $End = 0;
-    #     $usingCount = 0;
-    #     # $skip = 0;
-    #   }
-    # }
-
-    # # deletes lines until skip = 0
-    # if ($skip > 0) {
-    #   if (/{/) {
-    #     $tabcount -= 1;
-    #     push(@blockSkip, ($tabcount - 1));
-    #   }
-    #   $skip -= 1;
-    #   next;
-    # }
-
-    # sets tabs for line
-    # s/^ */$tabs/;
-    # s/^ *//;
-
-
-    if (/}/g) {
-      if ((@blockSkip > 0) && ($blockSkip[$#blockSkip] == $tabcount - 1)) {
+    if (/}/g && (@blockSkip > 0) && ($blockSkip[$#blockSkip] == $tabcount)) {
+      # if ((@blockSkip > 0) && ($blockSkip[$#blockSkip] == $tabcount)) {
         pop(@blockSkip);
         $paramCond = '';
-        # $skip = 1;
-        $skip = 2;
+        $skip = 1;
       }
-    }
-
-    # line skipping
-    if ($skip > 0) {
-      $skip -= 1;
-      next;
-    }
+    # }
 
     #############
     # main code #
@@ -124,22 +65,16 @@ while (<$in>) {
 
       if (/SqlConnection.*\("(.*)"\)/) {
         $SQLConnection = ${^CAPTURE[0]};
-        # $skip = 1;
-        $skip = 2;
       }
       if (/SqlCommand.*\(.*"(.*)".*\)/) {
         $SQLCommand = ${^CAPTURE[0]};
-        # $skip = 1;
-        $skip = 2;
       }
       else {
         #
       }
-      $usingCount += 1;
-      # next;
+      $skip = 2;
     }
-    # if (/Command\.(.*)\(\)/) {
-      if (/(?:var (.*) = )?Command\.(.*)\(\)/) {
+    if (/(?:var (.*) = )?Command\.(\w*)\(\)/) {
       $resultVar = ${^CAPTURE[0]} || '';
       $CRUDCommand = ${^CAPTURE[1]};
       # ExecuteScalar = Create
@@ -148,26 +83,28 @@ while (<$in>) {
       print $CRUDCommand;
       print "\n";
 
-      if ($CRUDCommand eq 'ExecuteScalar') { # Create
-        Create();
-      }
-      if ($CRUDCommand eq 'ExecuteReader') { # Read
-        Read();
-      }
-      if ($CRUDCommand eq 'ExecuteNonQuery') { # Update/Delete
-        UpdateDelete();
-      }
-      # next;
-      $skip = 1;
+      my %Command = (
+        'ExecuteScalar' => \&Create,
+        'ExecuteReader' => \&Read,
+        'ExecuteNonQuery' => \&UpdateDelete
+      );
+      ($Command{$CRUDCommand} || sub {})->();
+
+      # if ($CRUDCommand eq 'ExecuteScalar') { # Create
+      #   Create();
+      # }
+      # if ($CRUDCommand eq 'ExecuteReader') { # Read
+      #   Read();
+      # }
+      # if ($CRUDCommand eq 'ExecuteNonQuery') { # Update/Delete
+      #   UpdateDelete();
+      # }
+      $skip = $skip || 1;
     }
 
-    if ($usingCount == 2) {
-      if (/if \((.*)\)/ && $CRUDCommand eq '') {
-        $paramCond = ${^CAPTURE[0]};
-        # $skip = 1;
-        $skip = 2;
-        # next;
-      }
+    if (/if \((.*)\)/ && $CRUDCommand eq '' && $SQLCommand ne '') {
+      $paramCond = ${^CAPTURE[0]};
+      $skip = 2;
     }
 
     # s/Command\.Parameters\.AddWithValue\((.*)\);/new SqlParameter($1),/g;
@@ -175,41 +112,23 @@ while (<$in>) {
       my $param = "new SqlParameter(" . ${^CAPTURE[0]} . ")";
       if ($paramCond ne '') { $param = $paramCond . " ? " . $param . " : null" }
       push(@SQLParameters, $param . ",\n");
-      # push(@SQLParameters, ${^CAPTURE[0]});
-      # next;
-      $skip = 2;
+      $skip = 1;
     }
 
-    # simple substitutions
-
-    # s/$resultVar/Result/g unless $resultVar eq '';
-    # if ($Results) {
-    #   s/DataReader\.GetValue\(DataReader\.GetOrdinal\(("[a-zA-Z_]*?")\)\)/r.GetValue($1)/g;
-    # }
-    # else {
-    #   s/DataReader\.GetValue\(DataReader\.GetOrdinal\(("[a-zA-Z_]*?")\)\)/Result.GetValue($1)/g;
-    # }
-    # s/Convert\.(To[a-zA-Z0-9]*)\((.*?\))\)/$2.$1()/g;
-    # s/\.ToInt32\(\)/.ToShort()/g;
-    # s/\.ToInt64\(\)/.ToLong()/g;
-
-
-    # deletes lines until skip = 0
+    # line skipping
     if ($skip > 0) {
       if (/{/) {
-        $tabcount -= 1;
         push(@blockSkip, ($tabcount - 1));
       }
       $skip -= 1;
       next;
     }
-
-    # s/^/$tabs/;
   }
 
 
-  Replacements($_);
-  print $out $_;
+  # Replacements($_);
+  # print $out $_;
+  PrintLine();
 }
 
 close $in or die "$in: $!";
@@ -225,15 +144,68 @@ print "Done\n";
 sub Create {
   UpdateDelete("var Result = SQL.GetScalar");
 
-  my @lines =[];
+  my @lines = ();
+  my $next = 0;
+  my $end = 0;
   while (<$in>) {
     Tabs();
-    print $out $_;
-  }
-  print "poop";
 
-  # if (/if/) {
-  #   #
+    # if (/if \((.*)\)/) {
+    #   s/$resultVar != null && $resultVar != DBNull.Value/$resultVar == null || $resultVar DBNull.Value/;
+    # }
+    if (s/$resultVar != null && $resultVar != DBNull.Value/$resultVar == null || $resultVar DBNull.Value/) {
+      # $next = 2;
+      
+      push(@lines, $_);
+      $_ = <$in>;
+      Tabs();
+      push(@lines, $_);
+      push(@blockSkip, ($tabcount - 1));
+    }
+    if (/return new/ && ($blockSkip[$#blockSkip] == $tabcount)) {
+      foreach (@lines) {
+        PrintLine();
+      }
+      push(@lines, $_);
+      until (/};/) {
+        $_ = <$in>;
+        Tabs();
+        push(@lines, $_);
+      }
+    }
+
+    # if ($next > 0) {
+    #   if (/{/) {
+    #     push(@blockSkip, ($tabcount - 1));
+    #   }
+    #   push(@lines, $_);
+    #   print "push";
+    #   print $_;
+    #   print @lines;
+    #   $next -= 1;
+    #   next;
+    # }
+    if (/}/g && ($blockSkip[$#blockSkip] == $tabcount)) {
+      $tabcount += 1;
+      foreach (@lines) {
+        print $_;
+        PrintLine();
+      }
+      pop(@blockSkip);
+      print $.;
+      $end = 1;
+    }
+
+    # print $out $_;
+    PrintLine();
+    if ($end) { print $.; }
+    return if ($end)
+  }
+
+  # if (/if \((.*)\)/) {
+  #   s/$resultVar != null && $resultVar != DBNull.Value/poo/;
+  #   s/Result != null && Result != DBNull.Value/poo/;
+  #   PrintLine();
   # }
 
   # Replacements($_);
@@ -249,22 +221,35 @@ sub Read {
 }
 
 sub UpdateDelete {
-  # my $command = (@_) ? shift : "SQL.Execute";
-  # print $out $tabs;
-  # print $out $command . '("' . $SQLConnection . '", "' . $SQLCommand . '", new SqlParameter[] {' . "\n";
+  my $command = (@_) ? shift : "SQL.Execute";
+  $_ = $command . '("' . $SQLConnection . '", "' . $SQLCommand . '", new SqlParameter[] {' . "\n";
+  PrintLine();
 
-  # foreach (@SQLParameters) {
-  #   print $out ' ' x $tabsize . $tabs;
-  #   # print $out "new SqlParameter(", $_, "),\n";
-  #   print $out $_;
-  # }
+  $tabcount += 1;
+  foreach (@SQLParameters) {
+    PrintLine();
+  }
+  $tabcount -= 1;
 
-  # print $out $tabs;
-  # print $out "});\n";
+  $_ = "});\n";
+  PrintLine();
 }
 
+
+#####################
+# Utility functions #
+#####################
+
+# print line with tabs
 sub PrintLine {
-  #
+  my $line = '';
+  if ($tabcount) {
+    $line = ' ' x ($tabsize * $tabcount);
+    s/^ *//;
+  }
+  
+  Replacements($_);
+  print $out $line . $_;
 }
 
 
@@ -272,67 +257,43 @@ sub PrintLine {
 sub Replacements {
   s/$resultVar/Result/g unless $resultVar eq '';
   if ($Results) {
-    s/DataReader\.GetValue\(DataReader\.GetOrdinal\(("[a-zA-Z_]*?")\)\)/r.GetValue($1)/g;
+    s/DataReader\.GetValue\(DataReader\.GetOrdinal\(("\w*?")\)\)/r.GetValue($1)/g;
   }
   else {
-    s/DataReader\.GetValue\(DataReader\.GetOrdinal\(("[a-zA-Z_]*?")\)\)/Result.GetValue($1)/g;
+    s/DataReader\.GetValue\(DataReader\.GetOrdinal\(("\w*?")\)\)/Result.GetValue($1)/g;
   }
-  s/Convert\.(To[a-zA-Z0-9]*)\((.*?\))\)/$2.$1()/g;
+  s/Convert\.(To\w*)\((.*?\))\)/$2.$1()/g;
   s/\.ToInt32\(\)/.ToShort()/g;
   s/\.ToInt64\(\)/.ToLong()/g;
 }
 
+# set $tabcount
 sub Tabs {
-
-  tabcount = 0;
-  my $tabskip = @blockSkip;
-
+  $tabcount = 0;
   while (/^ /) {
     $tabcount += 1;
-    s/^ /^/;
+    s/^ //;
   }
   $tabcount /= $tabsize;
-  $tabcount -= $tabskip;
+  $tabcount -= @blockSkip;
 
-  my $tab = ' ' x ($tabsize * $count);
-  s/^/$tab/;
+  $tabs = ' ' x ($tabsize * $tabcount);
+  s/^/$tabs/;
 }
 
-
-# sub Tabs {
-#   $tabs = ' ' x ($tabsize * $tabcount);
-
-#   # increases tab for start of blocks
-#   if (/{/g) {
-#     $tabcount += 1;
-#   }
-#   # decreases tabs for end of blocks
-#   if (/}/g) {
-#     # if ($tabcount == $End) {
-#     #   $Start = 0;
-#     #   $End = 0;
-#     #   $usingCount = 0;
-#     #   $skip = 0;
-#     # }
-#     if ((@blockSkip > 0) && ($blockSkip[$#blockSkip] == $tabcount - 1)) {
-#       pop(@blockSkip);
-#       $paramCond = '';
-#       $skip = 1;
-#       # $skip = 2;
-#     }
-#     else {
-#       $tabcount -= 1;
-#     }
-#     $tabs = ' ' x ($tabsize * $tabcount);
-#     if ($tabcount == $End) {
-#       $Start = 0;
-#       $End = 0;
-#       $usingCount = 0;
-#       $skip = 0;
-#     }
-#   }
-#   s/^ */$tabs/;
-# }
+# clear variables
+sub Clear() {
+  $tabs = '';
+  $Results = 0;
+  $SQLConnection = '';
+  $SQLCommand = '';
+  @SQLParameters = ();
+  $paramCond = '';
+  $CRUDCommand = '';
+  $resultVar = '';
+  $skip = 0;
+  @blockSkip = ();
+}
 
 
 #using \(SqlCommand Command = new SqlCommand\("(.*?)", Connection\)\)
