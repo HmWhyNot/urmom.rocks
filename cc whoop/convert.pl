@@ -1,7 +1,7 @@
 #!/usr/bin/perl
-use v5.36;
+# use v5.36;
 use feature "switch";
-# use strict;
+use strict;
 # use warning;
 # use Switch;
 
@@ -64,10 +64,12 @@ while (<$in>) {
     if (/using \((.*)\)/) {
 
       if (/SqlConnection.*\("(.*)"\)/) {
-        $SQLConnection = ${^CAPTURE[0]};
+        # $SQLConnection = ${^CAPTURE[0]};
+        $SQLConnection = $1;
       }
       if (/SqlCommand.*\(.*"(.*)".*\)/) {
-        $SQLCommand = ${^CAPTURE[0]};
+        # $SQLCommand = ${^CAPTURE[0]};
+        $SQLCommand = $1;
       }
       else {
         #
@@ -75,8 +77,10 @@ while (<$in>) {
       $skip = 2;
     }
     if (/(?:var (.*) = )?Command\.(\w*)\(\)/) {
-      $resultVar = ${^CAPTURE[0]} || '';
-      $CRUDCommand = ${^CAPTURE[1]};
+      # $resultVar = ${^CAPTURE[0]} || '';
+      $resultVar = $1 || '';
+      # $CRUDCommand = ${^CAPTURE[1]};
+      $CRUDCommand = $2;
       # ExecuteScalar = Create
       # ExecuteReader = Read
       # ExecuteNonQuery = Update/Delete
@@ -103,13 +107,15 @@ while (<$in>) {
     }
 
     if (/if \((.*)\)/ && $CRUDCommand eq '' && $SQLCommand ne '') {
-      $paramCond = ${^CAPTURE[0]};
+      # $paramCond = ${^CAPTURE[0]};
+      $paramCond = $1;
       $skip = 2;
     }
 
     # s/Command\.Parameters\.AddWithValue\((.*)\);/new SqlParameter($1),/g;
     if (/Command\.Parameters\.AddWithValue\((.*)\);/) {
-      my $param = "new SqlParameter(" . ${^CAPTURE[0]} . ")";
+      # my $param = "new SqlParameter(" . ${^CAPTURE[0]} . ")";
+      my $param = "new SqlParameter(" . $1 . ")";
       if ($paramCond ne '') { $param = $paramCond . " ? " . $param . " : null" }
       push(@SQLParameters, $param . ",\n");
       $skip = 1;
@@ -145,73 +151,60 @@ sub Create {
   UpdateDelete("var Result = SQL.GetScalar");
 
   my @lines = ();
-  my $next = 0;
-  my $end = 0;
   while (<$in>) {
     Tabs();
 
-    # if (/if \((.*)\)/) {
-    #   s/$resultVar != null && $resultVar != DBNull.Value/$resultVar == null || $resultVar DBNull.Value/;
-    # }
     if (s/$resultVar != null && $resultVar != DBNull.Value/$resultVar == null || $resultVar DBNull.Value/) {
-      # $next = 2;
-      
       push(@lines, $_);
       $_ = <$in>;
       Tabs();
       push(@lines, $_);
-      push(@blockSkip, ($tabcount - 1));
+      push(@blockSkip, ($tabcount));
+      $_ = <$in>;
+      Tabs();
     }
+
     if (/return new/ && ($blockSkip[$#blockSkip] == $tabcount)) {
       foreach (@lines) {
         PrintLine();
       }
+
+      @lines = ();
       push(@lines, $_);
+      $_ = <$in>;
+
+      until (/return new/) {
+        Tabs();
+        push(@lines, $_);
+        $_ = <$in>;
+      }
+
+      pop(@blockSkip);
+      Tabs();
+      $tabcount += 1;
+      PrintLine();
+
       until (/};/) {
         $_ = <$in>;
         Tabs();
-        push(@lines, $_);
-      }
-    }
-
-    # if ($next > 0) {
-    #   if (/{/) {
-    #     push(@blockSkip, ($tabcount - 1));
-    #   }
-    #   push(@lines, $_);
-    #   print "push";
-    #   print $_;
-    #   print @lines;
-    #   $next -= 1;
-    #   next;
-    # }
-    if (/}/g && ($blockSkip[$#blockSkip] == $tabcount)) {
-      $tabcount += 1;
-      foreach (@lines) {
-        print $_;
+        $tabcount += 1;
         PrintLine();
       }
-      pop(@blockSkip);
-      print $.;
-      $end = 1;
+
+      $_ = pop(@lines);
+      $tabcount -= 1;
+      PrintLine();
+
+      foreach (@lines) {
+        print $out $_;
+      }
+
+      @lines = ();
+      return;
     }
 
-    # print $out $_;
     PrintLine();
-    if ($end) { print $.; }
-    return if ($end)
   }
-
-  # if (/if \((.*)\)/) {
-  #   s/$resultVar != null && $resultVar != DBNull.Value/poo/;
-  #   s/Result != null && Result != DBNull.Value/poo/;
-  #   PrintLine();
-  # }
-
-  # Replacements($_);
-  # s/^/$tabs/;
-  # print $out $_;
-  # $_ = <$in>;
 }
 
 sub Read {
