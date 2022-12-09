@@ -46,29 +46,22 @@ while (<$in>) {
     Clear();
     $Start = 0;
   }
-  # Tabs();
   TabCount();
 
   ###########################
   # Start of Object Process #
   ###########################
   if ($Start) {
-    # # Tabs();
 
     if (/}/ && (@blockSkip > 0) && ($blockSkip[$#blockSkip] == $tabcount)) {
-        # pop(@blockSkip);
         $paramCond = '';
         $skip = 1;
       }
-    # }
 
     #############
     # main code #
     #############
 
-    # if ($SQLCommand ne '' && $SQLConnection ne '') {
-    #   $skip = 1;
-    # }
     if (/using \((.*)\)/) {
 
       if (/SqlConnection.*\("(.*)"\)/) {
@@ -113,22 +106,6 @@ while (<$in>) {
       $skip = 1;
     }
 
-    # line skipping
-    # if ($skip > 0) {
-    #   while (/{/g) {
-    #     # push(@blockSkip, ($tabcount - 1));
-    #     push(@blockSkip, $tabcount);
-    #     # $tabcount -= 1;
-    #   }
-
-    #   # if ((/}/) && (@blockSkip > 0) && ($blockSkip[$#blockSkip] == ($tabcount))) {
-    #   while (/}/g && (@blockSkip > 0) && ($blockSkip[$#blockSkip] == ($tabcount))) {
-    #     pop(@blockSkip);
-    #     # $tabcount += 1;
-    #   }
-    #   $skip -= 1;
-    #   next;
-    # }
     Skip();
   }
 
@@ -150,34 +127,41 @@ sub Create {
 
   my @lines = ();
   while (<$in>) {
-    TabCount();
 
     if (s/$resultVar != null && $resultVar != DBNull.Value/$resultVar == null || $resultVar DBNull.Value/) {
       push(@lines, $_);
       $_ = <$in>;
-      TabCount();
       push(@lines, $_);
-      push(@blockSkip, ($tabcount));
       $_ = <$in>;
+      TabCount();
+      push(@blockSkip, ($tabcount));
+    }
+    else {
       TabCount();
     }
 
     if (/return new/ && ($blockSkip[$#blockSkip] == $tabcount)) {
+      pop(@blockSkip);
+      my $tc = $tabcount;
       foreach (@lines) {
+        TabCount();
         PrintLine();
       }
 
       @lines = ();
+      $tabcount = $tc - 1;
+      SetTabs();
       push(@lines, $_);
       $_ = <$in>;
 
       until (/return new/) {
         TabCount();
+        $tabcount -= 1;
+        SetTabs();
         push(@lines, $_);
         $_ = <$in>;
       }
 
-      pop(@blockSkip);
       TabCount();
       $tabcount += 1;
       PrintLine();
@@ -207,8 +191,47 @@ sub Create {
 
 sub Read {
 
+  $_ = <$in>;
+  $_ = <$in>;
+  push(@blockSkip, $tabcount);
+  $_ = <$in>;
+  print $.;
+  print $_;
+  my @lines = ();
+  while (<$in>) {
+    while (/{/g) {
+      push(@blockSkip, $tabcount);
+    }
+    while (/}/g) {
+      pop(@blockSkip);
+    }
+    # if (/List<(.*)> (\w)* = new List<\1>\((.*)\);/) {
+    if (/List<(.*)> Output = new List<\1>\((.*)\);/) {
+      #
+      # foreach (@lines) {
+      #   TabCount();
+      #   PrintLine();
+      #   # print $out $_;
+      # }
+      print $.;
+      print "\n";
+      last;
+    }
+    if (/while \(DataReader\.Read\(\)\)/) {
+      last;
+    }
+    push(@lines, $_);
+  }
 
+  # $tabcount += 1;
   PrintCommand("var Result = SQL.GetResult");
+  # $tabcount -= 1;
+  # push(@blockSkip, $tabcount);
+  foreach (@lines) {
+    TabCount();
+    PrintLine();
+    # print $out $_;
+  }
   # until (/return /) {
   #   $_ = <$in>;
   # }
@@ -242,18 +265,13 @@ sub PrintCommand {
 # print line with tabs
 sub PrintLine {
   if ($tabcount) {
-    # $line = ' ' x ($tabsize * $tabcount);
-    # $tabs = ' ' x ($tabsize * ($tabcount - @blockSkip));
-    # s/^ *//;
+    my $tc = $tabcount;
     SetTabs();
+    $tabcount = $tc;
   }
-  print $tabcount;
-  print ";;;;\n";
   
   Replacements();
-  # print $out $.;
-  # print $out ": ";
-  print $out $tabs . $_;
+  print $out $_;
 }
 
 
@@ -275,15 +293,11 @@ sub Replacements {
 sub Skip {
   if ($skip > 0) {
     while (/{/g) {
-      # push(@blockSkip, ($tabcount - 1));
       push(@blockSkip, $tabcount);
-      # $tabcount -= 1;
     }
 
-    # if ((/}/) && (@blockSkip > 0) && ($blockSkip[$#blockSkip] == ($tabcount))) {
     while (/}/g && (@blockSkip > 0) && ($blockSkip[$#blockSkip] == ($tabcount))) {
       pop(@blockSkip);
-      # $tabcount += 1;
     }
     $skip -= 1;
     next;
@@ -297,20 +311,12 @@ sub TabCount {
     s/^ //;
   }
   $tabcount /= $tabsize;
-  # $tabs = ' ' x ($tabsize * ($tabcount - @blockSkip));
-  # SetTabs();
-  # $tabcount -= @blockSkip;
 }
 
 sub SetTabs {
   $tabs = ' ' x ($tabsize * ($tabcount - @blockSkip));
-  print $_;
   s/^ */$tabs/;
-  print $_;
-  print $.;
-  print ": ";
-  print $tabcount;
-  print "\n";
+  $tabcount = 0;
 }
 
 # clear variables
