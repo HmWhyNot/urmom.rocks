@@ -192,50 +192,46 @@ sub Create {
 sub Read {
 
   $_ = <$in>;
-  $_ = <$in>;
   push(@blockSkip, $tabcount);
-  $_ = <$in>;
-  print $.;
-  print $_;
+  $tabcount += 1;
+  my @bs = @blockSkip;
   my @lines = ();
   while (<$in>) {
     while (/{/g) {
       push(@blockSkip, $tabcount);
+
+      $tabcount += 1;
     }
     while (/}/g) {
       pop(@blockSkip);
+      $tabcount -= 1;
     }
     # if (/List<(.*)> (\w)* = new List<\1>\((.*)\);/) {
     if (/List<(.*)> Output = new List<\1>\((.*)\);/) {
-      #
-      # foreach (@lines) {
-      #   TabCount();
-      #   PrintLine();
-      #   # print $out $_;
-      # }
-      print $.;
-      print "\n";
+      $Results = 1;
+      push(@lines, $_);
       last;
     }
     if (/while \(DataReader\.Read\(\)\)/) {
+      push(@blockSkip, $tabcount);
+      push(@lines, $_);
+      $_ = <$in>;
+      push(@lines, $_);
       last;
     }
     push(@lines, $_);
   }
+  
 
-  # $tabcount += 1;
+  $tabcount += 1;
   PrintCommand("var Result = SQL.GetResult");
-  # $tabcount -= 1;
-  # push(@blockSkip, $tabcount);
+  @blockSkip = @bs;
+
   foreach (@lines) {
     TabCount();
     PrintLine();
-    # print $out $_;
   }
-  # until (/return /) {
-  #   $_ = <$in>;
-  # }
-
+  $skip = 0;
 }
 
 sub UpdateDelete {
