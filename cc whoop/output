@@ -47,7 +47,7 @@
                     return new FrameworkResponse
                     {
                         Success = false,
-                        Message = "Unable to create coworker contact. null"
+                        Message = "Unable to create coworker contact."
                     };
                 }
                 return new FrameworkResponse
@@ -66,31 +66,31 @@
         {
             try
             {
-                if (DataReader.HasRows)
+                var Result = SQL.GetResult("PrimaryDB", "sp_ccCAHC_Get_Single_After_Hours_Contact_Contact", new SqlParameter[] {
+                    new SqlParameter("@ID", ID),
+                });
+                while (DataReader.Read())
                 {
-                    while (DataReader.Read())
+                    return new FrameworkLookupResponse
                     {
-                        return new FrameworkLookupResponse
+                        Success = true,
+                        Message = "Successfully retrieved coworker contact.",
+                        Result = new CoworkerContact
                         {
-                            Success = true,
-                            Message = "Successfully retrieved coworker contact.",
-                            Result = new CoworkerContact
-                            {
-                                ID = Result.GetValue("ID").ToLong(),
-                                Type = CoworkerContactType.GetSingleCoworkerContactType(Result.GetValue("Type_ID").ToLong()).LookupThen((success, response, result) => success && result != null ? result?.To<CoworkerContactType>() : null),
-                                Label = Result.GetValue("Label").ToString(),
-                                Value = Result.GetValue("Value").ToString(),
-                                CreatedBy = Coworker.GetSingleCoworker(Result.GetValue("Created_By").ToString(), 0).LookupThen((success, response, result) => success && result != null ? result?.To<Coworker>() : null),
-                                CreatedDate = Result.GetValue("Created_Date").ToDateTime()
-                            }
-                        };
-                    }
-                    return new FrameworkResponse
-                    {
-                        Success = false,
-                        Message = "Unable to read coworker contact from database."
+                            ID = Result.GetValue("ID").ToLong(),
+                            Type = CoworkerContactType.GetSingleCoworkerContactType(Result.GetValue("Type_ID").ToLong()).LookupThen((success, response, result) => success && result != null ? result?.To<CoworkerContactType>() : null),
+                            Label = Result.GetValue("Label").ToString(),
+                            Value = Result.GetValue("Value").ToString(),
+                            CreatedBy = Coworker.GetSingleCoworker(Result.GetValue("Created_By").ToString(), 0).LookupThen((success, response, result) => success && result != null ? result?.To<Coworker>() : null),
+                            CreatedDate = Result.GetValue("Created_Date").ToDateTime()
+                        }
                     };
                 }
+                return new FrameworkResponse
+                {
+                    Success = false,
+                    Message = "Unable to read coworker contact from database."
+                };
                 return new FrameworkLookupResponse
                 {
                     Success = true,
@@ -108,62 +108,65 @@
         {
             try
             {
-                if (DataReader.HasRows)
+                var Results = SQL.GetResults("PrimaryDB", "sp_ccVPN_Get_VLAN_Change_Requests_By_Location", new SqlParameter[] {
+                    new SqlParameter("@LocationID", LocationID),
+                    Unprocessed ? new SqlParameter("@LimitHours", DBNull.Value) : null,
+                    Unprocessed ? new SqlParameter("@Unprocessed", Unprocessed) : null,
+                    new SqlParameter("@SwitchManageable", SwitchManageable.DBNullBool()),
+                });
+                List<Queue> Output = new List<Queue>();
+                while (DataReader.Read())
                 {
-                    List<Queue> Output = new List<Queue>();
-                    while (DataReader.Read())
+                    Output.Add(new Queue
                     {
-                        Output.Add(new Queue
+                        ID = r.GetValue("QueueID").ToLong(),
+                        RequestedBy = new Coworker
                         {
-                            ID = Result.GetValue("QueueID").ToLong(),
-                            RequestedBy = new Coworker
+                            CoworkerID = r.GetValue("QueueRequestedBy").ToString().Trim().ToUpper(),
+                            FirstName = r.GetValue("QueueRequestedByFirstName").ToString().FormatName(),
+                            LastName = r.GetValue("QueueRequestedByLastName").ToString().FormatName()
+                        },
+                        RequestedDate = r.GetValue("QueueRequestedDate").ToDateTime(),
+                        RequestedWorkstation = new NetworkInformation
+                        {
+                            IPAddress = r.GetValue("QueueRequestedIP").ToString()
+                        },
+                        TargetSwitch = new Switch
+                        {
+                            ID = r.GetValue("QueueTargetSwitchID").ToLong(),
+                            Name = r.GetValue("QueueTargetSwitchName").ToString(),
+                            Manageable = r.GetValue("QueueTargetSwitchManageable").ToBoolean()
+                        },
+                        TargetBench = new Bench
+                        {
+                            ID = r.GetValue("QueueTargetBenchID").ToLong(),
+                            Name = r.GetValue("QueueTargetBenchName").ToString(),
+                            InterfaceName = r.GetValue("QueueTargetBenchPortName").ToString(),
+                        },
+                        TargetVLAN = new VLAN
+                        {
+                            ID = r.GetValue("QueueTargetVLANID").ToLong(),
+                            Tag = r.GetValue("QueueTargetVLANTag").ToString(),
+                            Customer = new CDW.Customer
                             {
-                                CoworkerID = Result.GetValue("QueueRequestedBy").ToString().Trim().ToUpper(),
-                                FirstName = Result.GetValue("QueueRequestedByFirstName").ToString().FormatName(),
-                                LastName = Result.GetValue("QueueRequestedByLastName").ToString().FormatName()
-                            },
-                            RequestedDate = Result.GetValue("QueueRequestedDate").ToDateTime(),
-                            RequestedWorkstation = new NetworkInformation
-                            {
-                                IPAddress = Result.GetValue("QueueRequestedIP").ToString()
-                            },
-                            TargetSwitch = new Switch
-                            {
-                                ID = Result.GetValue("QueueTargetSwitchID").ToLong(),
-                                Name = Result.GetValue("QueueTargetSwitchName").ToString(),
-                                Manageable = Result.GetValue("QueueTargetSwitchManageable").ToBoolean()
-                            },
-                            TargetBench = new Bench
-                            {
-                                ID = Result.GetValue("QueueTargetBenchID").ToLong(),
-                                Name = Result.GetValue("QueueTargetBenchName").ToString(),
-                                InterfaceName = Result.GetValue("QueueTargetBenchPortName").ToString(),
-                            },
-                            TargetVLAN = new VLAN
-                            {
-                                ID = Result.GetValue("QueueTargetVLANID").ToLong(),
-                                Tag = Result.GetValue("QueueTargetVLANTag").ToString(),
-                                Customer = new CDW.Customer
-                                {
-                                    ID = Result.GetValue("QueueTargetVLANCustomerID").ToString(),
-                                    Name = Result.GetValue("QueueTargetVLANCustomerName").ToString()
-                                }
-                            },
-                            Status = (Statuses)Enum.Parse(typeof(Statuses), Result.GetValue("QueueStatusID").ToString()),
-                            Resetable = Result.GetValue("QueueResetable").ToBoolean(),
-                            TTL = Result.GetValue("QueueTimeToLive") == DBNull.Value ? (DateTime?)null : Result.GetValue("QueueTimeToLive").ToDateTime(),
-                            AgentStartTime = Result.GetValue("QueueAgentStartTime") == DBNull.Value ? (DateTime?)null : Result.GetValue("QueueAgentStartTime").ToDateTime(),
-                            AgentCompletedTime = Result.GetValue("QueueAgentCompletedTime") == DBNull.Value ? (DateTime?)null : Result.GetValue("QueueAgentCompletedTime").ToDateTime()
-                        });
-                    }
-                    return new FrameworkSearchResponse
-                    {
-                        Success = true,
-                        Message = "Successfully retrieved queue items.",
-                        TotalResults = Output.Count,
-                        Results = Output
-                    };
+                                ID = r.GetValue("QueueTargetVLANCustomerID").ToString(),
+                                Name = r.GetValue("QueueTargetVLANCustomerName").ToString()
+                            }
+                        },
+                        Status = (Statuses)Enum.Parse(typeof(Statuses), r.GetValue("QueueStatusID").ToString()),
+                        Resetable = r.GetValue("QueueResetable").ToBoolean(),
+                        TTL = r.GetValue("QueueTimeToLive") == DBNull.Value ? (DateTime?)null : r.GetValue("QueueTimeToLive").ToDateTime(),
+                        AgentStartTime = r.GetValue("QueueAgentStartTime") == DBNull.Value ? (DateTime?)null : r.GetValue("QueueAgentStartTime").ToDateTime(),
+                        AgentCompletedTime = r.GetValue("QueueAgentCompletedTime") == DBNull.Value ? (DateTime?)null : r.GetValue("QueueAgentCompletedTime").ToDateTime()
+                    });
                 }
+                return new FrameworkSearchResponse
+                {
+                    Success = true,
+                    Message = "Successfully retrieved queue items.",
+                    TotalResults = Output.Count,
+                    Results = Output
+                };
                 return new FrameworkSearchResponse
                 {
                     Success = true,
@@ -509,5 +512,93 @@
             catch(Exception e)
             {
                 return new FrameworkResponse(e);
+            }
+        }
+
+        public static FrameworkResponse GetTemplates(int? Limit = null, int? Offset = null, string Sort = null, string Order = null, bool? IncludeArchived = null, string Search = null)
+        {
+            try
+            {
+                if (Connection.State != ConnectionState.Open) { Connection.Open(); }
+                Command.CommandType = CommandType.StoredProcedure;
+                var Results = SQL.GetResults("PrimaryDB", "sp_ccCBCB_Get_Templates_NEW", new SqlParameter[] {
+                    new SqlParameter("@Limit", Limit.HasValue ? (object)Limit.Value : DBNull.Value),
+                    new SqlParameter("@Offset", Offset.HasValue ? (object)Offset.Value : DBNull.Value),
+                    new SqlParameter("@IncludeArchived", IncludeArchived.HasValue ? (object)IncludeArchived.Value : DBNull.Value),
+                    new SqlParameter("@Search", !Search.IsNullOrEmptyOrWhiteSpace() ? (object)string.Join(",", Search.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries)) : DBNull.Value),
+                    new SqlParameter("@ORDER_TEXT", Sort != null && Order != null ? (object)$"{Sort} {Order}" : DBNull.Value),
+                });
+                int TotalResults = 0;
+                List<ColorBrandingTemplate> Output = new List<ColorBrandingTemplate>();
+                while (DataReader.Read())
+                {
+                    TotalResults = r.GetValue("TotalResults").ToShort();
+                    Output.Add(new ColorBrandingTemplate
+                    {
+                        ID = r.GetValue("ID").ToLong(),
+                        Name = r.GetValue("Name").ToString(),
+                        Customer = new Customer
+                        {
+                            ID = r.GetValue("Customer").ToString(),
+                            Name = r.GetValue("Customer_Name").ToString(),
+                            PrimarySalesRep = r.GetValue("Customer_Primary_Sales_Rep_EmpID") != DBNull.Value ? new Coworker
+                            {
+                                CoworkerID = r.GetValue("Customer_Primary_Sales_Rep_EmpID").ToString().Trim().ToUpper(),
+                                FirstName = r.GetValue("Customer_Primary_Sales_Rep_FirstName").ToString().FormatName(),
+                                LastName = r.GetValue("Customer_Primary_Sales_Rep_LastName").ToString().FormatName(),
+                                Extension = r.GetValue("Customer_Primary_Sales_Rep_Extension") != DBNull.Value ? r.GetValue("Customer_Primary_Sales_Rep_Extension").ToShort() : (int?)null,
+                                Email = r.GetValue("Customer_Primary_Sales_Rep_Email") != DBNull.Value ? r.GetValue("Customer_Primary_Sales_Rep_Email").ToString() : null,
+                                Phone = r.GetValue("Customer_Primary_Sales_Rep_Phone") != DBNull.Value ? r.GetValue("Customer_Primary_Sales_Rep_Phone").ToString() : null
+                            } : null
+                        },
+                        Status = r.GetValue("Status").ToLong() == 1 ? Statuses.Pending : r.GetValue("Status").ToLong() == 2 ? Statuses.Approved : r.GetValue("Status").ToLong() == 3 ? Statuses.Archived : Statuses.UNKNOWN,
+                        Duration = r.GetValue("Duration") != DBNull.Value ? TimeSpan.FromSeconds(r.GetValue("Duration").ToDouble()) : (TimeSpan?)null,
+                        ServiceClass = new ServiceClass
+                        {
+                            ID = r.GetValue("Service_Class").ToLong(),
+                            Name = r.GetValue("Service_Class_Name").ToString()
+                        },
+                        RITM = r.GetValue("RITM") != DBNull.Value ? r.GetValue("RITM").ToString() : null,
+                        CreationOrder = r.GetValue("Creation_Order") != DBNull.Value ? new Order(r.GetValue("Creation_Order").ToString()) : null,
+                        Dimensions = r.GetValue("Dimensions_Width") != DBNull.Value && r.GetValue("Dimensions_Height") != DBNull.Value ? new SizeF(r.GetValue("Dimensions_Width").ToSingle(), r.GetValue("Dimensions_Height").ToSingle()) : (SizeF?)null,
+                        IsDynamic = r.GetValue("IsDynamic").ToBoolean(),
+                        CreatedBy = new Coworker
+                        {
+                            CoworkerID = r.GetValue("Created_By").ToString().Trim().ToUpper(),
+                            FirstName = r.GetValue("Created_By_FirstName").ToString().FormatName(),
+                            LastName = r.GetValue("Created_By_LastName").ToString().FormatName()
+                        },
+                        CreatedDate = r.GetValue("Created_Date").ToDateTime(),
+                        LastModifiedBy = r.GetValue("Last_Modified_By") != DBNull.Value ? new CDW.Coworker
+                        {
+                            CoworkerID = r.GetValue("Last_Modified_By").ToString().Trim().ToUpper(),
+                            FirstName = r.GetValue("Last_Modified_By_FirstName").ToString().FormatName(),
+                            LastName = r.GetValue("Last_Modified_By_LastName").ToString().FormatName()
+                        } : null,
+                        LastModifiedDate = r.GetValue("Last_Modified_Date") != DBNull.Value ? r.GetValue("Last_Modified_Date").ToDateTime() : (DateTime?)null
+                    });
+                }
+                return new FrameworkSearchResponse
+                {
+                    Success = true,
+                    Message = "Successfully retrieved templates.",
+                    TotalResults = TotalResults,
+                    Results = Output
+                };
+                return new FrameworkSearchResponse
+                {
+                    Success = true,
+                    Message = "No templates found.",
+                    TotalResults = 0,
+                    Results = new List<ColorBrandingTemplate>()
+                };
+            }
+            catch (Exception e)
+            {
+                return new FrameworkResponse
+                {
+                    Success = false,
+                    Message = e.Message
+                };
             }
         }

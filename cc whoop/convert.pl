@@ -196,6 +196,7 @@ sub Read {
   $tabcount += 1;
   my @bs = @blockSkip;
   my @lines = ();
+  $resultVar = 'Result';
   while (<$in>) {
     while (/{/g) {
       push(@blockSkip, $tabcount);
@@ -206,14 +207,24 @@ sub Read {
       pop(@blockSkip);
       $tabcount -= 1;
     }
-    # if (/List<(.*)> (\w)* = new List<\1>\((.*)\);/) {
+    if (/if \(DataReader\.HasRows\)/) {
+      # push(@blockSkip, $tabcount);
+      push(@bs, $tabcount);
+      # $tabcount += 1;
+      $_ = <$in>;
+      $_ = <$in>;
+    }
+    # if (/List<(.*)> (\w)* = new List<(.*)>\((.*)\);/) {
     if (/List<(.*)> Output = new List<\1>\((.*)\);/) {
       $Results = 1;
-      push(@lines, $_);
-      last;
+      $resultVar = 'Results';
+      # push(@blockSkip, $tabcount);
+      # push(@lines, $_);
+      # last;
     }
     if (/while \(DataReader\.Read\(\)\)/) {
       push(@blockSkip, $tabcount);
+      # push(@bs, $tabcount);
       push(@lines, $_);
       $_ = <$in>;
       push(@lines, $_);
@@ -224,7 +235,7 @@ sub Read {
   
 
   $tabcount += 1;
-  PrintCommand("var Result = SQL.GetResult");
+  PrintCommand("var " . $resultVar . " = SQL.Get" . $resultVar);
   @blockSkip = @bs;
 
   foreach (@lines) {
@@ -273,11 +284,13 @@ sub PrintLine {
 
 # simple replacements
 sub Replacements {
-  s/$resultVar/Result/g unless $resultVar eq '';
+  # if ($resultVar eq 'Results') {
   if ($Results) {
+    # s/$resultVar/Results/g unless $resultVar eq '';
     s/DataReader\.GetValue\(DataReader\.GetOrdinal\(("\w*?")\)\)/r.GetValue($1)/g;
   }
   else {
+    s/$resultVar/Result/g unless $resultVar eq '';
     s/DataReader\.GetValue\(DataReader\.GetOrdinal\(("\w*?")\)\)/Result.GetValue($1)/g;
   }
   s/Convert\.(To\w*)\((.*?\))\)/$2.$1()/g;
