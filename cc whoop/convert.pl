@@ -35,6 +35,7 @@ my $CRUDCommand = '';
 my $resultVar = '';
 my $skip = 0;
 my @blockSkip = ();
+my @retSkip = ();
 my $Start = 0;
 while (<$in>) {
 
@@ -196,6 +197,7 @@ sub Read {
   $tabcount += 1;
   my @bs = @blockSkip;
   my @lines = ();
+  my $rType = '';
   $resultVar = 'Result';
   while (<$in>) {
     while (/{/g) {
@@ -207,27 +209,22 @@ sub Read {
       pop(@blockSkip);
       $tabcount -= 1;
     }
-    if (/if \(DataReader\.HasRows\)/) {
-      # push(@blockSkip, $tabcount);
-      push(@bs, $tabcount);
-      # $tabcount += 1;
+
+    if (s/if \(DataReader\.HasRows\)/' ' x $tabsize . 'if (Result != null && Result.Count > 0)'/e) {
+      push(@lines, $_);
       $_ = <$in>;
-      $_ = <$in>;
+      s/^/' ' x $tabsize/e;
     }
-    # if (/List<(.*)> (\w)* = new List<(.*)>\((.*)\);/) {
     if (/List<(.*)> Output = new List<\1>\((.*)\);/) {
       $Results = 1;
       $resultVar = 'Results';
-      # push(@blockSkip, $tabcount);
-      # push(@lines, $_);
-      # last;
+      $rType = $1;
+      $_ = <$in>;
     }
     if (/while \(DataReader\.Read\(\)\)/) {
       push(@blockSkip, $tabcount);
-      # push(@bs, $tabcount);
-      push(@lines, $_);
+      push(@bs, $tabcount);
       $_ = <$in>;
-      push(@lines, $_);
       last;
     }
     push(@lines, $_);
@@ -240,6 +237,11 @@ sub Read {
 
   foreach (@lines) {
     TabCount();
+    PrintLine();
+  }
+  if ($Results) {
+    $_ = <$in>;
+    $tabcount += 1;
     PrintLine();
   }
   $skip = 0;
@@ -300,6 +302,13 @@ sub Replacements {
 
 # set $tabcount
 sub Skip {
+  if ($retSkip[$#retSkip] == $tabcount) {
+    pop (@retSkip);
+    until (/};/) {
+      $_ = <$in>;
+    }
+    $skip = 1;
+  }
   if ($skip > 0) {
     while (/{/g) {
       push(@blockSkip, $tabcount);
@@ -311,6 +320,10 @@ sub Skip {
     $skip -= 1;
     next;
   }
+}
+
+sub SkipRet {
+  #
 }
 
 sub TabCount {
