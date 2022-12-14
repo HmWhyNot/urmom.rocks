@@ -264,7 +264,8 @@ sub Read {
     until (/Results = Output\s*$/) {
       # $_ = <$in> if (/TotalResults = TotalResults/g);
       if (/TotalResults = TotalResults/) {
-        # $_ = <$in>;
+        $_ = <$in>;
+        next;
       }
       TabCount();
       $tabcount += 1;
