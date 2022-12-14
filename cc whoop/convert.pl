@@ -106,6 +106,9 @@ while (<$in>) {
       push(@SQLParameters, $param . ",\n");
       $skip = 1;
     }
+    if (/Command\.\w*/ || /Connection\.\w*/) {
+      $skip = 1;
+    }
 
     Skip();
   }
@@ -222,10 +225,15 @@ sub Read {
       $_ = <$in>;
     }
     if (/while \(DataReader\.Read\(\)\)/) {
+      push(@retSkip, $tabcount + 1) unless $Results;
+      # push(@retSkip, $tabcount + 1);
       push(@blockSkip, $tabcount);
       push(@bs, $tabcount);
       $_ = <$in>;
       last;
+    }
+    if (/int TotalResults/) {
+      next;
     }
     push(@lines, $_);
   }
@@ -239,10 +247,37 @@ sub Read {
     TabCount();
     PrintLine();
   }
+  @lines = ();
   if ($Results) {
     $_ = <$in>;
     $tabcount += 1;
-    PrintLine();
+    # PrintLine();
+    print @lines;
+    until (s/}\);/}).ToList()/) {
+      s/Output\.Add\(new (.*)/Results = Results.Select(r => new $1/;
+      push(@lines, $_);
+      $_ = <$in>;
+    }
+    push(@lines, $_);
+    $_ = <$in>;
+    $_ = <$in>;
+    until (/Results = Output\s*$/) {
+      # $_ = <$in> if (/TotalResults = TotalResults/g);
+      if (/TotalResults = TotalResults/) {
+        # $_ = <$in>;
+      }
+      TabCount();
+      $tabcount += 1;
+      PrintLine();
+      $_ = <$in>;
+    }
+    foreach (@lines) {
+      TabCount();
+      $tabcount += 1;
+      PrintLine();
+    }
+    $Results = 0;
+    pop(@blockSkip);
   }
   $skip = 0;
 }
@@ -298,11 +333,12 @@ sub Replacements {
   s/Convert\.(To\w*)\((.*?\))\)/$2.$1()/g;
   s/\.ToInt32\(\)/.ToShort()/g;
   s/\.ToInt64\(\)/.ToLong()/g;
+  s/(TotalResults.*);(\s*)$/$1,$2/g;
 }
 
 # set $tabcount
 sub Skip {
-  if ($retSkip[$#retSkip] == $tabcount) {
+  if (/return / && $retSkip[$#retSkip] == $tabcount) {
     pop (@retSkip);
     until (/};/) {
       $_ = <$in>;
