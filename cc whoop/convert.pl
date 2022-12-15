@@ -39,10 +39,13 @@ my @retSkip = ();
 my $Start = 0;
 while (<$in>) {
 
-  # Starts the process for object when try is hit
-  if (/^ *try/) {
+  if (/^ *public static FrameworkResponse/) {
     $Start = 1;
   }
+  # Starts the process for object when try is hit
+  # if (/^ *try/) {
+  #   $Start = 1;
+  # }
   if (/^ *catch/) {
     Clear();
     $Start = 0;
@@ -63,6 +66,10 @@ while (<$in>) {
     # main code #
     #############
 
+    if (/SQL\.(GetResults?|Execute|GetScalar)/ && $CRUDCommand eq '') {
+      Clear();
+      $Start = 0;
+    }
     if (/using \((.*)\)/) {
 
       if (/SqlConnection.*\("(.*)"\)/) {
@@ -80,9 +87,11 @@ while (<$in>) {
     if (/(?:var (.*) = )?Command\.(\w*)\(\)/) {
       $resultVar = $1 // '';
       $CRUDCommand = $2;
-      # ExecuteScalar = Create
-      # ExecuteReader = Read
-      # ExecuteNonQuery = Update/Delete
+      # ExecuteScalar = Create / SQL.GetScalar
+      # ExecuteReader = Read / SQL.GetResult(s)
+      # ExecuteNonQuery = Update/Delete / SQL.Execute
+      print $.;
+      print " ";
       print $CRUDCommand;
       print "\n";
 
@@ -109,6 +118,9 @@ while (<$in>) {
     if (/Command\.\w*/ || /Connection\.\w*/) {
       $skip = 1;
     }
+    # if (/(\w*) = \1/) {
+    #   $skip = 1;
+    # }
 
     Skip();
   }
@@ -263,10 +275,10 @@ sub Read {
     $_ = <$in>;
     until (/Results = Output\s*$/) {
       # $_ = <$in> if (/TotalResults = TotalResults/g);
-      if (/TotalResults = TotalResults/) {
-        $_ = <$in>;
-        next;
-      }
+      # if (/TotalResults = TotalResults/) {
+      #   $_ = <$in>;
+      #   next;
+      # }
       TabCount();
       $tabcount += 1;
       PrintLine();
@@ -335,6 +347,7 @@ sub Replacements {
   s/\.ToInt32\(\)/.ToShort()/g;
   s/\.ToInt64\(\)/.ToLong()/g;
   s/(TotalResults.*);(\s*)$/$1,$2/g;
+  s/Output\.Count/Results.Count/
 }
 
 # set $tabcount
@@ -390,4 +403,5 @@ sub Clear {
   $resultVar = '';
   $skip = 0;
   @blockSkip = ();
+  @retSkip = ();
 }
