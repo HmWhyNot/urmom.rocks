@@ -1,9 +1,9 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, RouteRecordRaw, RouteComponent } from 'vue-router'
 import NoPage from '@/components/pages/NoPage.vue'
-import MainPage from '@/components/pages/0MainPage.vue'
-import Papa from '@/components/pages/1Papa.vue'
-import TicTacToe from '@/components/pages/2Games/1Tic-Tac-Toe.vue'
-import CircleGame from '@/components/pages/2Games/2CircleGame.vue'
+// import MainPage from '@/components/pages/0MainPage.vue'
+// import Papa from '@/components/pages/1Papa.vue'
+// import TicTacToe from '@/components/pages/2Games/1Tic-Tac-Toe.vue'
+// import CircleGame from '@/components/pages/2Games/2CircleGame.vue'
 
 // const routes: RouteRecordRaw[] = [
 //     { path: '/:noPage+', name: 'NoPage', component: NoPage },
@@ -13,46 +13,37 @@ import CircleGame from '@/components/pages/2Games/2CircleGame.vue'
 //     { path: '/circle-game', name: 'CircleGame', component: CircleGame },
 // ]
 
-let routes: RouteRecordRaw[] = [
-    { path: '/:noPage+', name: 'NoPage', component: NoPage },
-    { path: '/', name: 'MainPage', component: MainPage },
-]
+const routes: RouteRecordRaw[] = createRoutes(import.meta.glob('../components/pages/**/**.vue'), { path: '/:noPage+', name: 'NoPage', component: NoPage });
 
-const basePageDir: string = '../components/pages/';
-const mainPageName: string = 'MainPage';
-// const pageList: Record<string, () => Promise<unknown>> = import.meta.glob('../components/pages/**/**.vue');
-const pageList: Record<string, () => Promise<unknown>> = import.meta.glob('../components/pages/**/**.vue');
-let pages: { [key: string]: () => Promise<unknown> }[][] = [];
-for (const k in pageList) {
-    const p = pageList[k];
-    const m = k.replace(basePageDir, '').match(/(\d)(\w*)(?:\/(\d)([\w-]*))?\.vue/) ?? [''];
-    if (m[0] != '') {
-        const i1 = parseInt(m[1]);
-        const i2 = parseInt(m[3]) || 0;
-        const n = m[4] || m[2];
-        if (!pages[i1]) { pages[i1] = [] };
-        pages[i1][i2] = { [n]: p };
-    }
-}
-console.log('glob');
-console.log(pageList);
-console.warn(pages);
+function createRoutes(inputPages: Record<string, () => Promise<unknown>>, ...staticRoutes: RouteRecordRaw[]) {
+    let r: RouteRecordRaw[] = [];
+    const basePageDir: string = '../components/pages/';
+    const mainPageName: string = 'MainPage';
 
-for (const p of pages) {
-    console.log('h');
-    console.log(p);
-    const name: string = Object.keys(p[0])[0].toString().replace(/(^-[A-Z])/g, ' $1').trim();
-    const path: string = '/' + name.replace(mainPageName, '').toLowerCase();
-    const component: unknown = p[0][name];
-    let children: object[] = [];
-    for (const c of p.slice(1)) {
-        const n = Object.keys(c)[0];
-        children.push({ path: n.toLowerCase(), name: n.toString().replace(/(^-[A-Z])/g, ' $1').trim(), component: Object.values(c)[0]});
+    for (const k in inputPages) {
+        const p = inputPages[k];
+        const m = k.replace(basePageDir, '').match(/(\d)(\w*)(?:\/(\d)([\w-]*))?\.vue/) ?? [''];
+        if (m[0] != '') {
+            const i1 = parseInt(m[1]);
+            const i2 = parseInt(m[3]) || 0;
+            const n = m[4] || m[2];
+    
+            const name: string = n.replace(/(?<!-)([A-Z])/g, ' $1').trim();
+            const path: string = n.replace(mainPageName, '').toLowerCase();
+            const component: RouteComponent = p;
+    
+            if (i2 == 0) {
+                r[i1] = {path: '/' + path, name: name, component: component};
+            }
+            else {
+                r[i1].children = r[i1].children || [];
+                r[i1].children![i2 - 1] = {path: path, name: name, component: component};
+            }
+        }
     }
-    console.log(name);
-    console.log(path);
-    console.log(component);
-    console.log(children);
+    r.push(...staticRoutes);
+
+    return r;
 }
 
 export default createRouter({

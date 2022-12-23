@@ -14,9 +14,12 @@
       <v-container padding="0px">
         <v-row padding="0px" no-gutters justify="start">
           <div v-for="page in pageList" class="my-n16 py-n17 pe-6 ms-0 me-n4" cols="1">
+            <v-hover v-if="page.children.length > 0" v-slot="{ isHovering, props }">
+              <div v-if="isHovering">poo</div>
+            </v-hover>
             <router-link class="nav-link" tag="div" :to="page" replace>
               <v-sheet @click="dad = false" tabindex="0" class="nav" :style="{opacity: route.name == page.name ? 1 : 0.65}">
-                {{ page.name!.toString().replace(/([A-Z])/g, ' $1').trim() }}
+                {{ page.name!.toString() }}
               </v-sheet>
             </router-link>
           </div>
@@ -39,7 +42,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter, useRoute, RouteRecord } from 'vue-router'
 import { useMainStore } from '@/stores/mainStore'
 
 const props = defineProps({ dad: Boolean });
@@ -48,9 +51,12 @@ const store = useMainStore();
 
 const router = useRouter();
 const route = useRoute();
-const pageList = router.getRoutes().filter(r => { return (r.path.includes('/', 0)) && (!r.path.includes('/', 1)) && (!r.path.includes(':noPage')) });
+const pageList: RouteRecord[] = router.getRoutes().filter(r => { return (r.path.includes('/', 0)) && (!r.path.includes('/', 1)) && (!r.path.includes(':noPage')) });
 const hello = ref<string>('HELLO');
 const dad = ref<Boolean>(props.dad);
+console.log(router);
+console.log(route);
+console.warn(pageList[0].name);
 
 </script>
 
