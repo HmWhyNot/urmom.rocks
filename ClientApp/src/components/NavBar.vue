@@ -15,7 +15,7 @@
         <v-row padding="0px" no-gutters justify="start">
           <div v-for="page in pageList" class="my-n16 py-n17 pe-6 ms-0 me-n4" cols="1">
             <v-hover v-if="page.children.length > 0" v-slot="{ isHovering, props }">
-              <div v-if="isHovering">poo</div>
+              <div v-bind="props" v-if="!isHovering">poo</div>
             </v-hover>
             <router-link class="nav-link" tag="div" :to="page" replace>
               <v-sheet @click="dad = false" tabindex="0" class="nav" :style="{opacity: route.name == page.name ? 1 : 0.65}">
