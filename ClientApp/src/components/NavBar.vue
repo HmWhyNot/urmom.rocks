@@ -14,14 +14,26 @@
       <v-container padding="0px">
         <v-row padding="0px" no-gutters justify="start">
           <div v-for="page in pageList" class="my-n16 py-n17 pe-6 ms-0 me-n4" cols="1">
-            <v-hover v-if="page.children.length > 0" v-slot="{ isHovering, props }">
-              <div v-bind="props" v-if="!isHovering">poo</div>
-            </v-hover>
-            <router-link class="nav-link" tag="div" :to="page" replace>
-              <v-sheet @click="dad = false" tabindex="0" class="nav" :style="{opacity: route.name == page.name ? 1 : 0.65}">
-                {{ page.name!.toString() }}
-              </v-sheet>
-            </router-link>
+              <v-menu v-if="(page.children.length > 0)" activator="parent" open-on-hover location="top">
+                <!-- <v-card v-for="child in page.children">
+                  <div>{{ child.name }}</div>
+                </v-card> -->
+                <div v-for="child in page.children">
+                  <router-link v-bind="props" class="nav-link" tag="div" :to="child" replace>
+                    <v-sheet @click="dad = false" tabindex="0" class="nav" :style="{opacity: route.name == child.name ? 1 : 0.65}">
+                      <!-- {{ child.name!.toString() }} -->
+                      {{ child.name }}
+                    </v-sheet>
+                  </router-link>
+                </div>
+              </v-menu>
+            
+              <router-link v-bind="props" class="nav-link" tag="div" :to="page" replace>
+                <v-sheet @click="dad = false" tabindex="0" class="nav" :style="{opacity: route.name == page.name ? 1 : 0.65}">
+                  <!-- {{ page.name!.toString() }} -->
+                  {{ page.name }}
+                </v-sheet>
+              </router-link>
           </div>
           <v-spacer cols="2"/>
         </v-row>
@@ -54,7 +66,7 @@ const route = useRoute();
 const pageList: RouteRecord[] = router.getRoutes().filter(r => { return (r.path.includes('/', 0)) && (!r.path.includes('/', 1)) && (!r.path.includes(':noPage')) });
 const hello = ref<string>('HELLO');
 const dad = ref<Boolean>(props.dad);
-console.log(router);
+console.log(router.getRoutes());
 console.log(route);
 console.warn(pageList[0].name);
 

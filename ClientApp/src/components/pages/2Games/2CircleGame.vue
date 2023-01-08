@@ -1,22 +1,18 @@
 <template>
-    <v-container class="fill-height">
-        <v-sheet>
 
-            <v-container ref="con" id="con" class="ma-0 pa-0 fill-height">
-                <v-row>
-                    <v-col align="center">
-                <div>{{ count }}</div>
-                <v-stage ref="stage" :config="configKonva">
-                    <v-layer id="layer" ref="layer">
-                        <v-circle ref="cir" id="cir" @click="moveCircle" :config="configCircle"></v-circle>
-                    </v-layer> 
-                </v-stage>
-            </v-col>
-            </v-row>
-            </v-container>
+  <v-container ref="con" id="con" class="ma-0 pa-0 fill-height">
+    <v-row>
+      <v-col align="center">
+        <div>{{ count }}</div>
+        <v-stage ref="stage" :config="configKonva">
+          <v-layer id="layer" ref="layer">
+            <v-circle ref="cir" id="cir" @click="moveCircle" :config="configCircle"></v-circle>
+          </v-layer> 
+        </v-stage>
+      </v-col>
+    </v-row>
+  </v-container>
 
-        </v-sheet>
-    </v-container>
 </template>
 
 <script setup lang="ts">

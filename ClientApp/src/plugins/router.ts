@@ -42,7 +42,7 @@ function createRoutes(inputPages: Record<string, () => Promise<unknown>>, ...sta
         }
     }
     r.push(...staticRoutes);
-
+    
     return r;
 }
 

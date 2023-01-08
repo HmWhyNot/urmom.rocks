@@ -1,33 +1,29 @@
 <template>
-  <v-container class="fill-height">
-    <v-sheet>
 
-      <v-container ref="con" id="con" class="ma-0 pa-0 fill-height">
-        <v-row>
-          <v-col align="center">
-            <div>Current Player: {{ (gameState.player < 0) ? 'Naughts' : 'Crosses' }}</div>
-            <v-stage ref="stage" :config="configKonva">
-              <v-layer id="layer" ref="layer">
-                <v-line v-for="line in frameGroup" :config="{ ...configFrame, points: line }"/>
-                <v-group v-for="(square, i) in squareGroup" :key="'square' + i" :config="{ ...configSquare, ...square }" @click="squareClick(i)">
-                  <v-circle v-if="gameState.field[i] < 0" :config="configNaught" />
-                  <v-line v-if="gameState.field[i] > 0" :config="configCross" />
-                  <v-rect :config="{...configSquare, opacity: 0}"/>
-                </v-group>
-                <v-line ref="winLine" v-if="winLinePos != ''" :config="{ ...configWinLine, ...winLineGroup[winLinePos] }"/>
-                <v-arc ref="catsArc" v-if="winLinePos != ''" :config="{ ...configCatsArc }"/>
-                <v-group ref="msgBox" v-if="winLinePos != ''">
-                  <v-rect :config="configMsgBox"/>
-                  <v-text :config="{ ...configMsgText, text: winMessages[gameState.player + 1] }"/>
-                </v-group>
-              </v-layer>
-            </v-stage>
-          </v-col>
-        </v-row>
-      </v-container>
-
-    </v-sheet>
+  <v-container ref="con" id="con" class="ma-0 pa-0 fill-height">
+    <v-row>
+      <v-col align="center">
+        <div>Current Player: {{ (gameState.player < 0) ? 'Naughts' : 'Crosses' }}</div>
+        <v-stage ref="stage" :config="configKonva">
+          <v-layer id="layer" ref="layer">
+            <v-line v-for="line in frameGroup" :config="{ ...configFrame, points: line }"/>
+            <v-group v-for="(square, i) in squareGroup" :key="'square' + i" :config="{ ...configSquare, ...square }" @click="squareClick(i)">
+              <v-circle v-if="gameState.field[i] < 0" :config="configNaught" />
+              <v-line v-if="gameState.field[i] > 0" :config="configCross" />
+              <v-rect :config="{...configSquare, opacity: 0}"/>
+            </v-group>
+            <v-line ref="winLine" v-if="winLinePos != ''" :config="{ ...configWinLine, ...winLineGroup[winLinePos] }"/>
+            <v-arc ref="catsArc" v-if="winLinePos != ''" :config="{ ...configCatsArc }"/>
+            <v-group ref="msgBox" v-if="winLinePos != ''">
+              <v-rect :config="configMsgBox"/>
+              <v-text :config="{ ...configMsgText, text: winMessages[gameState.player + 1] }"/>
+            </v-group>
+          </v-layer>
+        </v-stage>
+      </v-col>
+    </v-row>
   </v-container>
+
 </template>
 
 <script setup lang="ts">
@@ -40,6 +36,7 @@ import vuetify from '@/plugins/vuetify';
 
 const store = useMainStore();
 const colors = vuetify.theme.current.value.colors;
+console.log('tictac');
 
 
 interface KEvent {
