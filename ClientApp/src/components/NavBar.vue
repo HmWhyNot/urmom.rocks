@@ -15,13 +15,9 @@
         <v-row padding="0px" no-gutters justify="start">
           <div v-for="page in pageList" class="my-n16 py-n17 pe-6 ms-0 me-n4" cols="1">
               <v-menu v-if="(page.children.length > 0)" activator="parent" open-on-hover location="top">
-                <!-- <v-card v-for="child in page.children">
-                  <div>{{ child.name }}</div>
-                </v-card> -->
                 <div v-for="child in page.children">
                   <router-link v-bind="props" class="nav-link" tag="div" :to="child" replace>
                     <v-sheet @click="dad = false" tabindex="0" class="nav" :style="{opacity: route.name == child.name ? 1 : 0.65}">
-                      <!-- {{ child.name!.toString() }} -->
                       {{ child.name }}
                     </v-sheet>
                   </router-link>
@@ -30,7 +26,6 @@
             
               <router-link v-bind="props" class="nav-link" tag="div" :to="page" replace>
                 <v-sheet @click="dad = false" tabindex="0" class="nav" :style="{opacity: route.name == page.name ? 1 : 0.65}">
-                  <!-- {{ page.name!.toString() }} -->
                   {{ page.name }}
                 </v-sheet>
               </router-link>
