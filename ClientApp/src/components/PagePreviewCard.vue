@@ -1,7 +1,7 @@
 <template>
   <v-container>
-    <v-sheet>
-      <slot>poo</slot>
+    <v-sheet height="400" width="350">
+      <slot></slot>
     </v-sheet>
   </v-container>
 </template>
